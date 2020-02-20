@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name" translatable="false">Holla</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="sign_in_cancelled">Sign-in canceled</string>
+    <string name="no_internet_connection">No internet connection</string>
+    <string name="sign_out">Sign out</string>
+    <string name="hint_type_message">Type message…</string>
+</resources>

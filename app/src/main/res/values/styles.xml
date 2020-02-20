@@ -1,0 +1,27 @@
+<resources>
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.ToolbarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar">
+        <!-- Very Important! Dictates the color of option menu items -->
+        <item name="android:textViewStyle">@style/AppTheme.TextView.Toolbar</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="AppTheme.ToolbarOverlay" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents" />
+
+    <style name="AppTheme.TextView.Toolbar" parent="TextAppearance.MaterialComponents.Headline3">
+        <item name="fontFamily">@font/raleway_bold</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="AppTheme.FullScreenDialog" parent="@style/AppTheme">
+        <item name="android:windowIsFloating">false</item>
+    </style>
+</resources>
