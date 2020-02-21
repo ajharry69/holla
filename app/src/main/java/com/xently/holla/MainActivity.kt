@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.databinding.DataBindingUtil
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
@@ -26,8 +27,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = MainActivityBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        binding = DataBindingUtil.setContentView(this, R.layout.main_activity)
 
         setSupportActionBar(binding.toolbar)
 
@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
         configuration = AppBarConfiguration(setOf(R.id.fragment_chat_list))
         controller = navHostFragment.navController
         setupActionBarWithNavController(controller, configuration)
+
         if (FirebaseAuth.getInstance().currentUser == null) {
             requestSignIn()
         } else onSignInSuccess()

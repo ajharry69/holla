@@ -8,5 +8,5 @@ data class Client(
     val mobileNumber: String,
     val email: String,
     val dateJoined: Timestamp
-) {
+){
 }

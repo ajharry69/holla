@@ -6,4 +6,5 @@
     <string name="sign_out">Sign out</string>
     <string name="hint_type_message">Type message…</string>
     <string name="content_desc_logo">Logo</string>
+    <string name="content_desc_profile_picture">Profile picture</string>
 </resources>
