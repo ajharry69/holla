@@ -14,9 +14,9 @@
 
     <style name="AppTheme.AppBarOverlay" parent="AppTheme.ToolbarOverlay" />
 
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents" />
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Dark" />
 
-    <style name="AppTheme.TextView.Toolbar" parent="TextAppearance.MaterialComponents.Headline3">
+    <style name="AppTheme.TextView.Toolbar" parent="TextAppearance.MaterialComponents.Headline6">
         <item name="fontFamily">@font/raleway_bold</item>
         <item name="android:textStyle">bold</item>
     </style>

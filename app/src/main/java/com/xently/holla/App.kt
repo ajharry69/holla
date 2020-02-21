@@ -2,6 +2,7 @@ package com.xently.holla
 
 import androidx.multidex.MultiDexApplication
 import com.xently.holla.data.repository.schema.IChatRepository
+import com.xently.holla.data.repository.schema.IContactRepository
 import com.xently.holla.data.repository.schema.IUserRepository
 
 class App : MultiDexApplication() {
@@ -10,4 +11,7 @@ class App : MultiDexApplication() {
 
     val userRepository: IUserRepository
         get() = ServiceLocator.provideUserRepository(this)
+
+    val contactRepository: IContactRepository
+        get() = ServiceLocator.provideContactRepository(this)
 }

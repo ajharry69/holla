@@ -37,10 +37,6 @@ class ChatFragment : Fragment() {
             showSnackBar(binding.root, "Implement file attachment")
         }
     }
-
-    companion object {
-        fun newInstance() = ChatFragment()
-    }
 }
 
 

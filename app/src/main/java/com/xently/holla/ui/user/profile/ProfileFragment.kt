@@ -31,9 +31,4 @@ class ProfileFragment : Fragment() {
         _binding = null
         super.onDestroyView()
     }
-
-    companion object {
-        fun newInstance() = ProfileFragment()
-    }
-
 }

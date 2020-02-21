@@ -5,4 +5,5 @@
     <string name="no_internet_connection">No internet connection</string>
     <string name="sign_out">Sign out</string>
     <string name="hint_type_message">Type message…</string>
+    <string name="content_desc_logo">Logo</string>
 </resources>
