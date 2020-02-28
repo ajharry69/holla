@@ -5,8 +5,10 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
+import com.xently.holla.R
 import com.xently.holla.data.model.Chat
 import com.xently.holla.databinding.ChatItemBinding
+import com.xently.holla.databinding.ContactItemBinding
 
 class ChatListAdapter(options: FirestoreRecyclerOptions<Chat>) :
     FirestoreRecyclerAdapter<Chat, ChatListAdapter.ChatViewHolder>(options) {

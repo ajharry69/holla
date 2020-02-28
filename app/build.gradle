@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId "com.xently.holla"
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
@@ -67,9 +67,9 @@ dependencies {
 
     // Firebase
     implementation 'com.google.firebase:firebase-auth:19.2.0'
-    implementation 'com.google.firebase:firebase-firestore:21.4.0'
+    implementation 'com.google.firebase:firebase-firestore:21.4.1'
     implementation 'com.google.firebase:firebase-storage:19.1.1'
-    implementation 'com.google.firebase:firebase-messaging:20.1.0'
+    implementation 'com.google.firebase:firebase-messaging:20.1.1'
 
     // FirebaseUI
     implementation 'com.firebaseui:firebase-ui-firestore:6.2.0'
