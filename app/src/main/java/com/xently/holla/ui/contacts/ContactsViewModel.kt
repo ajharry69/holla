@@ -3,10 +3,9 @@ package com.xently.holla.ui.contacts
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.xently.holla.data.repository.schema.IContactRepository
+import com.xently.holla.viewmodels.ContactViewModel
 
-class ContactsViewModel(private val repository: IContactRepository) : ViewModel() {
-    // TODO: Implement the ViewModel
-}
+class ContactsViewModel(repository: IContactRepository) : ContactViewModel(repository)
 
 class ContactsViewModelFactory(private val repository: IContactRepository) :
     ViewModelProvider.NewInstanceFactory() {

@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
 
         with(viewModel) {
             setClient(FirebaseAuth.getInstance().currentUser)
-            observableClient.observe(this@MainActivity, Observer {
+            observableContact.observe(this@MainActivity, Observer {
                 if (it == null) requestSignIn()
             })
         }

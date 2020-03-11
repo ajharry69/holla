@@ -5,61 +5,56 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.firebase.ui.auth.AuthUI
 import com.google.android.gms.tasks.Task
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.firestore.CollectionReference
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.xently.holla.FBCollection.USERS
-import com.xently.holla.data.model.Client
+import com.xently.holla.data.model.Contact
 import com.xently.holla.data.repository.schema.IUserRepository
 import com.xently.holla.utils.Type
 import com.xently.holla.utils.Type.CREATE
 import com.xently.holla.utils.Type.UPDATE
 
-class UserRepository internal constructor(private val context: Context) : IUserRepository {
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    private val db: CollectionReference = FirebaseFirestore.getInstance().collection(USERS)
+class UserRepository internal constructor(private val context: Context) : BaseRepository(),
+    IUserRepository {
 
-    private val _observableClient: MutableLiveData<Client> = MutableLiveData()
+    private val _observableContact: MutableLiveData<Contact> = MutableLiveData()
 
-    override fun setClient(client: Client?) {
-        _observableClient.value = client
+    override fun setContact(contact: Contact?) {
+        _observableContact.value = contact
     }
 
-    override fun setClient(user: FirebaseUser?) = setClient(user.asClient())
+    override fun setContact(user: FirebaseUser?) = setContact(user.asClient())
 
-    override val client: Client?
-        get() = auth.currentUser.asClient()
+    override val contact: Contact?
+        get() = firebaseAuth.currentUser.asClient()
 
-    override val observableClient: LiveData<Client>
-        get() = _observableClient
+    override val observableContact: LiveData<Contact>
+        get() = _observableContact
 
-    override fun addClient(client: Client): Task<Void> = saveClient(client)
+    override fun addContact(contact: Contact): Task<Void> = saveClient(contact)
 
-    override fun addClient(user: FirebaseUser): Task<Void> {
+    override fun addContact(user: FirebaseUser): Task<Void> {
         val client = user.asClient()!!
-        return addClient(client)
+        return addContact(client)
     }
 
-    override fun updateClient(client: Client): Task<Void> = saveClient(client, UPDATE)
+    override fun updateContact(contact: Contact): Task<Void> = saveClient(contact, UPDATE)
 
     override fun signOut(): Task<Void> =
         AuthUI.getInstance().signOut(context).addOnCompleteListener {
-            if (it.isSuccessful) setClient(auth.currentUser)
+            if (it.isSuccessful) setContact(firebaseAuth.currentUser)
         }
 
-    private fun FirebaseUser?.asClient(): Client? {
+    private fun FirebaseUser?.asClient(): Contact? {
         val currentUser = this ?: return null
-        return Client(currentUser.uid, currentUser.displayName, currentUser.phoneNumber)
+        return Contact(currentUser.uid, currentUser.displayName, currentUser.phoneNumber)
     }
 
-    private fun FirebaseUser?.asClientOrDefault(default: Client): Client = asClient() ?: default
+    private fun FirebaseUser?.asClientOrDefault(default: Contact): Contact = asClient() ?: default
 
-    private fun saveClient(client: Client, type: Type = CREATE): Task<Void> = when (type) {
-        CREATE -> db.document(client.id).set(client)
-        UPDATE -> db.document(client.id).set(client, SetOptions.merge())
+    private fun saveClient(contact: Contact, type: Type = CREATE): Task<Void> = when (type) {
+        CREATE -> usersCollection.document(contact.id).set(contact)
+        UPDATE -> usersCollection.document(contact.id).set(contact, SetOptions.merge())
     }.addOnSuccessListener {
-        setClient(auth.currentUser)
+        setContact(firebaseAuth.currentUser)
     }
 }

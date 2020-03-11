@@ -6,6 +6,12 @@
     <data>
 
         <import type="android.content.Context" />
+
+        <import type="com.xently.holla.data.model.Contact" />
+
+        <variable
+            name="contact"
+            type="Contact" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -31,6 +37,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:text="@{contact.name}"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@+id/bio"
@@ -44,7 +51,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="@string/default_bio"
+            android:text="@{contact.status ?? @string/default_bio}"
             app:layout_constraintBottom_toBottomOf="@+id/profile_picture"
             app:layout_constraintEnd_toEndOf="@+id/name"
             app:layout_constraintStart_toStartOf="@+id/name"
