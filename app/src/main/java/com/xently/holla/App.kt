@@ -12,7 +12,6 @@ import com.xently.holla.data.repository.schema.IContactRepository
 import com.xently.holla.data.repository.schema.IUserRepository
 import java.io.InputStream
 
-
 class App : MultiDexApplication() {
     val chatRepository: IChatRepository
         get() = ServiceLocator.provideChatRepository(this)

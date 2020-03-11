@@ -3,15 +3,22 @@ package com.xently.holla.data.model
 import android.os.Parcel
 import android.os.Parcelable
 
-data class Chat(val id: Int, val name: String, val messages: List<Message>) : Parcelable {
+data class Chat(
+    val uid: String,
+    val id: String,
+    val name: String,
+    val messages: List<Message>
+) : Parcelable {
     constructor(parcel: Parcel) : this(
-        parcel.readInt(),
+        parcel.readString()!!,
+        parcel.readString()!!,
         parcel.readString()!!,
         parcel.createTypedArrayList(Message)?.toList() ?: emptyList()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(id)
+        parcel.writeString(uid)
+        parcel.writeString(id)
         parcel.writeString(name)
         parcel.writeTypedArray(messages.toTypedArray(), flags)
     }
@@ -23,5 +30,4 @@ data class Chat(val id: Int, val name: String, val messages: List<Message>) : Pa
 
         override fun newArray(size: Int): Array<Chat?> = arrayOfNulls(size)
     }
-
 }

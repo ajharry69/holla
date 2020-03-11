@@ -11,6 +11,11 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
 import com.xently.holla.Log.Type.*
 
+object FBCollection {
+    const val USERS = "users"
+    const val MESSAGES = "messages"
+}
+
 object Log {
     enum class Type {
         ASSERT,

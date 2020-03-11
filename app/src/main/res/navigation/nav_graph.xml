@@ -22,8 +22,8 @@
     </fragment>
     <fragment
         android:id="@+id/fragment_chat"
-        android:name="com.xently.holla.ui.chat.ChatFragment"
-        tools:layout="@layout/chat_fragment">
+        android:name="com.xently.holla.ui.message.list.MessageListFragment"
+        tools:layout="@layout/message_list_fragment">
         <action
             android:id="@+id/action_chatFragment_to_profileFragment"
             app:destination="@id/fragment_profile" />

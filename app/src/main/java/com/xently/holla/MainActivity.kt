@@ -17,6 +17,10 @@ import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUserMetadata
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import com.xently.holla.data.model.Client
 import com.xently.holla.databinding.MainActivityBinding
 
 class MainActivity : AppCompatActivity() {
@@ -24,6 +28,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: MainActivityBinding
     private lateinit var configuration: AppBarConfiguration
     private lateinit var controller: NavController
+    private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,7 +44,8 @@ class MainActivity : AppCompatActivity() {
         controller = navHostFragment.navController
         setupActionBarWithNavController(controller, configuration)
 
-        if (FirebaseAuth.getInstance().currentUser == null) {
+        auth = FirebaseAuth.getInstance()
+        if (auth.currentUser == null) {
             requestSignIn()
         } else onSignInSuccess()
     }
@@ -48,7 +54,28 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RC_SIGN_IN) {
             if (resultCode == Activity.RESULT_OK) {
-                onSignInSuccess()
+                val currentUser = auth.currentUser ?: return
+                val metadata: FirebaseUserMetadata = currentUser.metadata ?: return
+                if (metadata.creationTimestamp == metadata.lastSignInTimestamp) {
+                    // The user is new, show them a fancy intro screen!
+                    val client = Client(
+                        currentUser.uid,
+                        currentUser.displayName,
+                        currentUser.phoneNumber
+                    )
+                    FirebaseFirestore.getInstance().collection(FBCollection.USERS)
+                        .document(currentUser.uid).set(client, SetOptions.merge())
+                        .addOnCompleteListener(this) {
+                            if (it.isSuccessful) {
+                                onSignInSuccess()
+                            } else {
+                                showSnackBar(this, binding.root, R.string.sign_in_failed)
+                            }
+                        }
+                } else {
+                    // This is an existing user, show them a welcome back screen.
+                    onSignInSuccess()
+                }
             } else {
                 val response = IdpResponse.fromResultIntent(data)
 
@@ -107,14 +134,8 @@ class MainActivity : AppCompatActivity() {
     private fun requestSignIn() {
         startActivityForResult(
             AuthUI.getInstance().createSignInIntentBuilder()
-                .setAvailableProviders(
-                    arrayListOf(
-                        AuthUI.IdpConfig.GoogleBuilder().build(),
-                        AuthUI.IdpConfig.EmailBuilder().build(),
-                        AuthUI.IdpConfig.PhoneBuilder().build(),
-                        AuthUI.IdpConfig.AnonymousBuilder().build()
-                    )
-                ).setIsSmartLockEnabled(!BuildConfig.DEBUG, true).build(),
+                .setAvailableProviders(arrayListOf(AuthUI.IdpConfig.PhoneBuilder().build()))
+                .setIsSmartLockEnabled(!BuildConfig.DEBUG, true).build(),
             RC_SIGN_IN
         )
     }

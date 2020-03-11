@@ -1,10 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <data />
+    <data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+        <import type="com.xently.holla.data.model.Message" />
+
+        <variable
+            name="message"
+            type="Message" />
+    </data>
+
+    <RelativeLayout
+        android:id="@+id/message_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp">
+
+        <FrameLayout
+            android:id="@+id/left_arrow"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="2dp"
+            android:background="@drawable/ic_chat_message_arrow"
+            android:rotation="180" />
+
+        <FrameLayout
+            android:id="@+id/right_arrow"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignEnd="@+id/message"
+            android:layout_alignParentTop="true"
+            android:layout_marginEnd="25dp"
+            android:background="@drawable/ic_chat_message_arrow"
+            android:rotation="180" />
+
+        <LinearLayout
+            android:id="@+id/message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="26dp"
+            android:layout_marginRight="26dp"
+            android:background="@drawable/ic_chat_message_background"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <TextView
+                android:id="@+id/message_text"
+                style="@style/TextAppearance.AppCompat.Medium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{message.body}"
+                android:textIsSelectable="true"
+                android:textStyle="bold"
+                tools:text="Hey this is a message, look!" />
+
+            <TextView
+                android:id="@+id/name_time_stamp"
+                style="@style/TextAppearance.AppCompat.Small"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{message.timeSent.toDate().toString()}"
+                android:textIsSelectable="true"
+                tools:text="Some User" />
+
+        </LinearLayout>
+    </RelativeLayout>
 
 </layout>

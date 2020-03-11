@@ -8,4 +8,27 @@
     <string name="content_desc_logo">Logo</string>
     <string name="content_desc_profile_picture">Profile picture</string>
     <string name="default_bio">Hey there, am using Holla</string>
+    <string name="content_desc_retry">Retry</string>
+    <string name="empty_list_text">No records found</string>
+    <string name="search">Search</string>
+
+    <string name="and">and</string>
+    <string name="left">left</string>
+    <string name="ago">ago</string>
+    <string name="year_abbrev">yr</string>
+    <string name="month_abbrev">mon</string>
+    <string name="week_abbrev">wk</string>
+    <string name="hour_abbrev">hr</string>
+    <string name="minute_abbrev">min</string>
+    <string name="second_abbrev">sec</string>
+    <string name="millisecond_abbrev">ms</string>
+    <string name="millisecond">millisecond</string>
+    <string name="second">second</string>
+    <string name="minute">minute</string>
+    <string name="hour">hour</string>
+    <string name="week">week</string>
+    <string name="month">month</string>
+    <string name="year">year</string>
+    <string name="date_unspecified">Unspecified</string>
+    <string name="sign_in_failed">Sign in failed</string>
 </resources>
