@@ -5,8 +5,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
@@ -18,9 +20,7 @@ import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUserMetadata
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
-import com.xently.holla.data.model.Client
+import com.xently.holla.Log.Type.ERROR
 import com.xently.holla.databinding.MainActivityBinding
 
 class MainActivity : AppCompatActivity() {
@@ -28,7 +28,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: MainActivityBinding
     private lateinit var configuration: AppBarConfiguration
     private lateinit var controller: NavController
-    private lateinit var auth: FirebaseAuth
+
+    private val viewModel: MainActivityViewModel by viewModels {
+        MainActivityViewModelFactory((applicationContext as App).userRepository)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,62 +47,19 @@ class MainActivity : AppCompatActivity() {
         controller = navHostFragment.navController
         setupActionBarWithNavController(controller, configuration)
 
-        auth = FirebaseAuth.getInstance()
-        if (auth.currentUser == null) {
-            requestSignIn()
-        } else onSignInSuccess()
+        with(viewModel) {
+            setClient(FirebaseAuth.getInstance().currentUser)
+            observableClient.observe(this@MainActivity, Observer {
+                if (it == null) requestSignIn()
+            })
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RC_SIGN_IN) {
-            if (resultCode == Activity.RESULT_OK) {
-                val currentUser = auth.currentUser ?: return
-                val metadata: FirebaseUserMetadata = currentUser.metadata ?: return
-                if (metadata.creationTimestamp == metadata.lastSignInTimestamp) {
-                    // The user is new, show them a fancy intro screen!
-                    val client = Client(
-                        currentUser.uid,
-                        currentUser.displayName,
-                        currentUser.phoneNumber
-                    )
-                    FirebaseFirestore.getInstance().collection(FBCollection.USERS)
-                        .document(currentUser.uid).set(client, SetOptions.merge())
-                        .addOnCompleteListener(this) {
-                            if (it.isSuccessful) {
-                                onSignInSuccess()
-                            } else {
-                                showSnackBar(this, binding.root, R.string.sign_in_failed)
-                            }
-                        }
-                } else {
-                    // This is an existing user, show them a welcome back screen.
-                    onSignInSuccess()
-                }
-            } else {
-                val response = IdpResponse.fromResultIntent(data)
-
-                // Sign in failed
-                if (response == null) {
-                    // User pressed back button
-//                    showSnackBar(this, binding.root, R.string.sign_in_cancelled)
-                    finish()
-                    return
-                }
-
-                if (response.error?.errorCode == ErrorCodes.NO_NETWORK) {
-                    showSnackBar(this, binding.root, R.string.no_internet_connection)
-                    return
-                }
-
-                showSnackBar(this, binding.root, R.string.unknown_error)
-                Log.show(
-                    LOG_TAG,
-                    "Sign-in error: ${response.error?.message}",
-                    response.error,
-                    Log.Type.ERROR
-                )
-            }
+            if (resultCode == Activity.RESULT_OK) onSignInSuccess()
+            else onSignInFailed(data)
         }
     }
 
@@ -114,22 +74,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.sign_out -> {
-                AuthUI.getInstance().signOut(this).addOnCompleteListener(this) {
-                    if (it.isSuccessful) requestSignIn()
-                }
-                true
-            }
+            R.id.sign_out -> viewModel.signOut().isSuccessful
             else -> item.onNavDestinationSelected(controller) || super.onOptionsItemSelected(item)
         }
     }
 
     override fun onSupportNavigateUp(): Boolean =
         controller.navigateUp(configuration) || super.onSupportNavigateUp()
-
-    private fun onSignInSuccess() {
-
-    }
 
     private fun requestSignIn() {
         startActivityForResult(
@@ -138,6 +89,37 @@ class MainActivity : AppCompatActivity() {
                 .setIsSmartLockEnabled(!BuildConfig.DEBUG, true).build(),
             RC_SIGN_IN
         )
+    }
+
+    private fun onSignInSuccess() {
+        val currentUser = FirebaseAuth.getInstance().currentUser ?: return
+        val metadata: FirebaseUserMetadata = currentUser.metadata ?: return
+        if (metadata.creationTimestamp == metadata.lastSignInTimestamp) {
+            // The user is new, show them a fancy intro screen!
+            viewModel.addClient(currentUser).addOnCompleteListener(this) {
+                if (!it.isSuccessful) showSnackBar(this, binding.root, R.string.sign_in_failed)
+            }
+        }
+    }
+
+    private fun onSignInFailed(data: Intent?) {
+        val response = IdpResponse.fromResultIntent(data)
+
+        when {
+            response == null -> finish() // User pressed back button
+            response.error?.errorCode == ErrorCodes.NO_NETWORK -> {
+                showSnackBar(this, binding.root, R.string.no_internet_connection)
+            }
+            else -> {
+                showSnackBar(this, binding.root, R.string.unknown_error)
+                Log.show(
+                    LOG_TAG,
+                    "Sign-in error: ${response.error?.message}",
+                    response.error,
+                    ERROR
+                )
+            }
+        }
     }
 
     companion object {

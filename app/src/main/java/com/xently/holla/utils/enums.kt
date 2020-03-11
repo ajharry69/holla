@@ -78,4 +78,4 @@ enum class VerificationCodeRequest {
     VERIFY
 }
 
-enum class Type { CREATE, UPDATE, DELETE }
+enum class Type { CREATE, UPDATE }
