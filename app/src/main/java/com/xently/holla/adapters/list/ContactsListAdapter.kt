@@ -3,10 +3,10 @@ package com.xently.holla.adapters.list
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.xently.holla.data.model.Contact
 import com.xently.holla.databinding.ContactItemBinding
+import com.xently.xui.adapters.list.ListAdapter
 
 class ContactsListAdapter : ListAdapter<Contact, ContactsListAdapter.ContactsViewHolder>(object :
     DiffUtil.ItemCallback<Contact>() {
@@ -27,10 +27,12 @@ class ContactsListAdapter : ListAdapter<Contact, ContactsListAdapter.ContactsVie
         )
 
     override fun onBindViewHolder(holder: ContactsViewHolder, position: Int) {
+        super.onBindViewHolder(holder, position)
         holder.bind(getItem(position))
     }
 
-    inner class ContactsViewHolder(private val binding: ContactItemBinding) : RecyclerView.ViewHolder(binding.root){
+    inner class ContactsViewHolder(private val binding: ContactItemBinding) :
+        RecyclerView.ViewHolder(binding.root) {
         fun bind(contact: Contact) {
             binding.contact = contact
         }

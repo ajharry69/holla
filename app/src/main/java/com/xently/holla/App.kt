@@ -1,6 +1,7 @@
 package com.xently.holla
 
 import android.content.Context
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.multidex.MultiDexApplication
 import com.bumptech.glide.Glide
 import com.bumptech.glide.Registry
@@ -21,6 +22,11 @@ class App : MultiDexApplication() {
 
     val contactRepository: IContactRepository
         get() = ServiceLocator.provideContactRepository(this)
+
+    override fun onCreate() {
+        super.onCreate()
+        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true)
+    }
 }
 
 @GlideModule

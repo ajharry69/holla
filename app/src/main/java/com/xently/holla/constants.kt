@@ -14,6 +14,7 @@ import com.xently.holla.Log.Type.*
 object FBCollection {
     const val USERS = "users"
     const val MESSAGES = "messages"
+    const val CONVERSATIONS = "conversations"
 }
 
 object Log {
@@ -105,10 +106,11 @@ object Log {
  */
 fun showSnackBar(
     view: View,
-    message: String,
+    message: String?,
     duration: Int = Snackbar.LENGTH_SHORT, actionButtonText: String? = null,
     actionButtonClick: ((snackBar: Snackbar) -> Unit)? = null
 ) {
+    if (message == null) return
     val snackbar = Snackbar.make(view, message, duration)
     with(snackbar) {
         setActionTextColor(ContextCompat.getColor(context, R.color.colorAccent))

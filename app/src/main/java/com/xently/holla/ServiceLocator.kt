@@ -41,7 +41,7 @@ object ServiceLocator {
     }
 
     private fun createChatRepository(context: Context): IChatRepository {
-        val repo: IChatRepository = ChatRepository(context)
+        val repo: IChatRepository = ChatRepository()
         this.chatRepository = repo
         return repo
     }

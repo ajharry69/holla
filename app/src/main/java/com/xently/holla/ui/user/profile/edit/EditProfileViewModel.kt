@@ -1,4 +1,4 @@
-package com.xently.holla.ui.user.profile
+package com.xently.holla.ui.user.profile.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

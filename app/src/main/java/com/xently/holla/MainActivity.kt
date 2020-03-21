@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.navigation.NavController
@@ -22,8 +21,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUserMetadata
 import com.xently.holla.Log.Type.ERROR
 import com.xently.holla.databinding.MainActivityBinding
+import com.xently.xui.SearchableActivity
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : SearchableActivity() {
 
     private lateinit var binding: MainActivityBinding
     private lateinit var configuration: AppBarConfiguration
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.fragment_container) as NavHostFragment?
             ?: return
 
-        configuration = AppBarConfiguration(setOf(R.id.fragment_chat_list))
+        configuration = AppBarConfiguration(setOf(R.id.dest_conversation_list))
         controller = navHostFragment.navController
         setupActionBarWithNavController(controller, configuration)
 
@@ -81,6 +81,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSupportNavigateUp(): Boolean =
         controller.navigateUp(configuration) || super.onSupportNavigateUp()
+
+    override fun onSearchIntentReceived(query: String, metadata: Bundle?) {
+
+    }
 
     private fun requestSignIn() {
         startActivityForResult(

@@ -1,4 +1,4 @@
-package com.xently.holla.ui.user.profile
+package com.xently.holla.ui.user.profile.edit
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -32,6 +32,7 @@ class EditProfileFragment : Fragment() {
     }
 
     companion object {
-        fun newInstance() = EditProfileFragment()
+        fun newInstance() =
+            EditProfileFragment()
     }
 }

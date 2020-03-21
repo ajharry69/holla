@@ -3,74 +3,50 @@ package com.xently.holla.ui.contacts
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.navigation.findNavController
+import androidx.recyclerview.widget.RecyclerView
 import com.xently.holla.App
+import com.xently.holla.Log
+import com.xently.holla.R
 import com.xently.holla.adapters.list.ContactsListAdapter
-import com.xently.holla.databinding.ContactsFragmentBinding
-import com.xently.holla.requestFeaturePermission
+import com.xently.holla.data.model.Contact
+import com.xently.holla.ui.contacts.ContactListFragmentDirections.Companion.actionMessage
+import com.xently.xui.ListFragment
 
-class ContactsFragment : Fragment() {
+class ContactListFragment : ListFragment<Contact>() {
 
     private val onReadContactsPermissionGranted = {
-        viewModel.getContactList(requireActivity())
+        onRefreshRequested(false)
     }
-
-    private var _binding: ContactsFragmentBinding? = null
-    private val binding: ContactsFragmentBinding
-        get() = _binding!!
 
     private val contactsListAdapter: ContactsListAdapter by lazy {
-        ContactsListAdapter()
-    }
-
-    private val viewModel: ContactsViewModel by viewModels {
-        ContactsViewModelFactory((requireContext().applicationContext as App).contactRepository)
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        _binding = ContactsFragmentBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
-    override fun onDestroyView() {
-        _binding = null
-        super.onDestroyView()
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        with(binding.list) {
-            adapter = contactsListAdapter
-            layoutManager = LinearLayoutManager(context)
-            setHasFixedSize(true)
+        ContactsListAdapter().apply {
+            listItemClickListener = this@ContactListFragment
         }
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        // Sets the adapter for the ListView
-        viewModel.getObservableContactList().observe(viewLifecycleOwner, Observer {
-            contactsListAdapter.submitList(it)
-        })
+    private val viewModel: ContactListViewModel by viewModels {
+        ContactListViewModelFactory((requireContext().applicationContext as App).contactRepository)
     }
 
-    override fun onResume() {
-        super.onResume()
+    override val noDataText: CharSequence?
+        get() = getString(R.string.no_contacts, getString(R.string.app_name))
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
         requestFeaturePermission(
             Manifest.permission.READ_CONTACTS,
             PRC_READ_CONTACTS,
             onReadContactsPermissionGranted
         )
+        // Sets the adapter for the ListView
+        viewModel.getObservableContactList().observe(viewLifecycleOwner, Observer {
+            onObservableListChanged(it)
+            contactsListAdapter.submitList(it)
+        })
     }
 
     override fun onRequestPermissionsResult(
@@ -92,6 +68,25 @@ class ContactsFragment : Fragment() {
             // Add other 'when' lines to check for other permissions this app might request.
             else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
+    }
+
+    override fun onCreateRecyclerView(recyclerView: RecyclerView): RecyclerView {
+        return super.onCreateRecyclerView(recyclerView).apply {
+            adapter = contactsListAdapter
+        }
+    }
+
+    override fun onRefreshRequested(forced: Boolean) {
+        viewModel.getContactList(requireActivity())
+    }
+
+    override fun onListItemClick(model: Contact, view: View) {
+        view.findNavController().navigate(actionMessage(model))
+    }
+
+    override fun onListItemLongClick(model: Contact, view: View): Boolean {
+        Log.show("FCMService", "Contact Long Click: $model")
+        return true
     }
 
     companion object {

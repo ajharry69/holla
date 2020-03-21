@@ -4,7 +4,6 @@ import android.content.Context
 import android.telephony.TelephonyManager
 import java.util.*
 
-
 object CountryISOInitialsToCode {
     /**
      * Gets country (phone) code for country with ISO initials = [isoInitial]

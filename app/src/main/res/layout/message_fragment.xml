@@ -8,10 +8,9 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="8dp"
-        tools:context=".ui.message.list.MessageListFragment">
+        tools:context=".ui.list.message.MessageListFragment">
 
-        <androidx.recyclerview.widget.RecyclerView
+        <androidx.viewpager.widget.ViewPager
             android:id="@+id/list_view"
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -24,6 +23,7 @@
             android:id="@+id/data_entry_container"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:padding="4dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -31,22 +31,23 @@
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/message_container"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:endIconContentDescription="@string/content_desc_send_message"
+                app:endIconDrawable="@drawable/ic_action_send"
+                app:endIconMode="custom"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toTopOf="parent"
+                app:startIconContentDescription="@string/content_desc_attach_file"
+                app:startIconDrawable="@drawable/ic_action_attach_file">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/message"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawableStart="@drawable/ic_action_attach_file"
-                    android:drawableLeft="@drawable/ic_action_attach_file"
-                    android:drawableEnd="@drawable/ic_action_send"
-                    android:drawableRight="@drawable/ic_action_send"
-                    android:drawablePadding="4dp"
                     android:hint="@string/hint_type_message"
                     android:inputType="textMultiLine|text"
                     android:maxLines="4"

@@ -1,6 +1,6 @@
 package com.xently.holla.data.repository.schema
 
-import androidx.fragment.app.FragmentActivity
+import android.app.Activity
 import androidx.lifecycle.LiveData
 import com.xently.holla.data.model.Contact
 
@@ -10,7 +10,7 @@ import com.xently.holla.data.model.Contact
  * in phone)
  */
 interface IContactRepository {
-    fun getContactList(activity: FragmentActivity): List<Contact>
+    suspend fun getContactList(activity: Activity): List<Contact>
 
-    fun getObservableContactList(): LiveData<List<Contact>>
+    suspend fun getObservableContactList(): LiveData<List<Contact>>
 }

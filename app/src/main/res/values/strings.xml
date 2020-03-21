@@ -31,4 +31,16 @@
     <string name="year">year</string>
     <string name="date_unspecified">Unspecified</string>
     <string name="sign_in_failed">Sign in failed</string>
+    <string name="toolbar_title_profile">Account Profile</string>
+    <string name="toolbar_title_edit_profile">Edit Profile</string>
+    <string name="toolbar_title_message_list">Messages</string>
+    <string name="toolbar_title_message">Compose Message</string>
+    <string name="toolbar_title_contact_list">Contacts</string>
+    <string name="no_conversations">No conversations yet! Press the button at the bottom-right of
+        the screen to start a chat</string>
+    <string name="loading_conversations">Loading conversations…</string>
+    <string name="no_contacts">None of your contacts is registered with %1$s yet!</string>
+    <string name="no_messages"><![CDATA[No messages yet! Compose & send a new one below]]></string>
+    <string name="content_desc_attach_file">Attach file</string>
+    <string name="content_desc_send_message">Send message</string>
 </resources>

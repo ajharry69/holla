@@ -1,25 +1,24 @@
 package com.xently.holla.data.repository
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.provider.ContactsContract.CommonDataKinds.Phone
 import androidx.annotation.RequiresPermission
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.xently.holla.Log
 import com.xently.holla.data.model.Contact
+import com.xently.holla.data.model.Contact.CREATOR.Fields.MOBILE
 import com.xently.holla.data.repository.schema.IContactRepository
 import com.xently.holla.utils.CountryISOInitialsToCode
 
 class ContactRepository internal constructor(private val context: Context) : BaseRepository(),
     IContactRepository {
 
-    private val observableContactList: MutableLiveData<List<Contact>> = MutableLiveData()
+    private val observableContactList: MutableLiveData<List<Contact>> = MutableLiveData(emptyList())
 
     private fun setContactList(list: Iterable<Contact>) {
         observableContactList.value = list.toList()
-        Log.show("FCMService", "Set List Size: ${observableContactList.value}") // TODO: Delete
     }
 
     private fun setContactList(vararg contacts: Contact) {
@@ -27,7 +26,7 @@ class ContactRepository internal constructor(private val context: Context) : Bas
     }
 
     @RequiresPermission(Manifest.permission.READ_CONTACTS)
-    override fun getContactList(activity: FragmentActivity): List<Contact> {
+    override suspend fun getContactList(activity: Activity): List<Contact> {
         val contactList = arrayListOf<Contact>()
         val countryCode = CountryISOInitialsToCode.getCountryCode(context)
 
@@ -50,30 +49,25 @@ class ContactRepository internal constructor(private val context: Context) : Bas
 
                 if (mobileNumber == firebaseAuth.currentUser?.phoneNumber) continue
                 val contact = Contact("", name, mobileNumber)
-                contactList.addIfRegistered(contact, activity)
+                contactList.addIfRegistered(activity, contact)
             }
         }
-
-//        setContactList(contactList)
-
         return contactList
     }
 
-    override fun getObservableContactList(): LiveData<List<Contact>> = observableContactList
+    override suspend fun getObservableContactList(): LiveData<List<Contact>> = observableContactList
 
-    private fun ArrayList<Contact>.addIfRegistered(contact: Contact, activity: FragmentActivity) {
+    private fun ArrayList<Contact>.addIfRegistered(activity: Activity, contact: Contact) {
         // Get only one [contact] with mobile number = contact.mobileNumber
-        usersCollection.whereEqualTo("mobileNumber", contact.mobileNumber).limit(1).get()
+        usersCollection.whereEqualTo(MOBILE, contact.mobileNumber).limit(1).get()
             .addOnCompleteListener(activity) {
-                val result = it.result
-                if (it.isSuccessful && result != null) {
-                    for (snapshot in result) if (snapshot.exists()) this.add(
-                        snapshot.toObject(
-                            Contact::class.java
-                        ).copy(name = contact.name) // Use save name
+                if (it.isSuccessful && it.result != null) {
+                    for (snapshot in it.result!!) if (snapshot.exists()) this@addIfRegistered.add(
+                        snapshot.toObject(Contact::class.java)
+                            .copy(name = contact.name) // Use save name
                     )
 
-                    setContactList(this)
+                    setContactList(this@addIfRegistered)
                 }
             }
     }

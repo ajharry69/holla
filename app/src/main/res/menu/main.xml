@@ -4,6 +4,7 @@
 
     <item
         android:id="@+id/sign_out"
+        android:orderInCategory="10000"
         android:title="@string/sign_out"
         app:showAsAction="never" />
 </menu>
