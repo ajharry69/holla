@@ -60,7 +60,7 @@ class MessageListFragment : ChatListFragment() {
         return super.onCreateRecyclerView(recyclerView).apply {
             layoutManager = LinearLayoutManager(requireContext()).apply {
                 reverseLayout = true
-                stackFromEnd = true
+//                stackFromEnd = true
             }
             addOnLayoutChangeListener { _, _, _, _, bottom, _, _, _, oldBottom ->
                 if (bottom < oldBottom) {

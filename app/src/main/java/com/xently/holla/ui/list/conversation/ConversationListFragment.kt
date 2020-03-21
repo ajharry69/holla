@@ -7,12 +7,10 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
 import androidx.navigation.findNavController
-import com.google.android.material.snackbar.Snackbar
 import com.xently.holla.App
 import com.xently.holla.R
 import com.xently.holla.adapters.list.ConversationListAdapter
 import com.xently.holla.data.model.Chat
-import com.xently.holla.showSnackBar
 import com.xently.holla.ui.list.ChatListFragment
 import com.xently.holla.ui.list.conversation.ConversationListFragmentDirections.Companion.actionContactList
 import com.xently.holla.ui.list.conversation.ConversationListFragmentDirections.Companion.actionMessage
@@ -32,12 +30,6 @@ class ConversationListFragment : ChatListFragment() {
 
     override val noDataText: CharSequence?
         get() = getString(R.string.no_conversations)
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        showSnackBar(requireView(), getString(R.string.loading_conversations), Snackbar.LENGTH_LONG)
-    }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
@@ -59,6 +51,6 @@ class ConversationListFragment : ChatListFragment() {
     }
 
     override fun onListItemClick(model: Chat, view: View) {
-        view.findNavController().navigate(actionMessage(viewModel.getContactFromChat(model)))
+        view.findNavController().navigate(actionMessage(model.receiver))
     }
 }

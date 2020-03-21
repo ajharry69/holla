@@ -7,32 +7,32 @@
         <import type="com.xently.holla.data.model.Chat" />
 
         <variable
-            name="message"
-            type="Chat" />
+            name="chat"
+            type="com.xently.holla.data.model.Chat" />
     </data>
 
     <RelativeLayout
         android:id="@+id/message_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="5dp"
-        android:paddingBottom="5dp">
+        android:paddingTop="@dimen/message_item_container_vertical_padding"
+        android:paddingBottom="@dimen/message_item_container_vertical_padding">
 
         <FrameLayout
             android:id="@+id/left_arrow"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="2dp"
+            android:layout_width="@dimen/message_arrow_dimen"
+            android:layout_height="@dimen/message_arrow_dimen"
+            android:layout_marginStart="@dimen/left_arrow_start_margin"
             android:background="@drawable/ic_chat_message_arrow"
             android:rotation="180" />
 
         <FrameLayout
             android:id="@+id/right_arrow"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="@dimen/message_arrow_dimen"
+            android:layout_height="@dimen/message_arrow_dimen"
             android:layout_alignEnd="@+id/message"
             android:layout_alignParentTop="true"
-            android:layout_marginEnd="25dp"
+            android:layout_marginEnd="@dimen/right_arrow_end_margin"
             android:background="@drawable/ic_chat_message_arrow"
             android:rotation="180" />
 
@@ -40,18 +40,18 @@
             android:id="@+id/message"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="26dp"
-            android:layout_marginRight="26dp"
+            android:layout_marginLeft="@dimen/message_text_end_margins"
+            android:layout_marginRight="@dimen/message_text_end_margins"
             android:background="@drawable/ic_chat_message_background"
             android:orientation="vertical"
-            android:padding="10dp">
+            android:padding="@dimen/message_text_padding">
 
             <TextView
                 android:id="@+id/message_text"
                 style="@style/TextAppearance.AppCompat.Medium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{message.body}"
+                android:text="@{chat.body}"
                 android:textIsSelectable="true"
                 android:textStyle="bold"
                 tools:text="Hey this is a message, look!" />
@@ -61,7 +61,7 @@
                 style="@style/TextAppearance.AppCompat.Small"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{message.timeSent.toDate().toString()}"
+                android:text="@{chat.timeSent.toDate().toString()}"
                 android:textIsSelectable="true"
                 tools:text="Some User" />
 

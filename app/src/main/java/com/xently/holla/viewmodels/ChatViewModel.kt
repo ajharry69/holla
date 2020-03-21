@@ -26,8 +26,4 @@ abstract class ChatViewModel(private val repository: IChatRepository) : ViewMode
     fun getConversations(contact: Contact?) = runBlocking(viewModelScope.coroutineContext) {
         repository.getConversations(contact)
     }
-
-    fun getContactFromChat(chat: Chat) = runBlocking(viewModelScope.coroutineContext) {
-        repository.getContactFromChat(chat)
-    }
 }

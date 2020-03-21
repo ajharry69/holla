@@ -11,6 +11,7 @@
     <string name="content_desc_retry">Retry</string>
     <string name="empty_list_text">No records found</string>
     <string name="search">Search</string>
+    <string name="default_name">Receiver Name</string>
 
     <string name="and">and</string>
     <string name="left">left</string>

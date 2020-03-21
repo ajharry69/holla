@@ -36,20 +36,22 @@ class MessageListAdapter : ListAdapter<Chat, MessageViewHolder>(ChatDiffUtil()) 
     inner class MessageViewHolder(val binding: MessageItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        private val mGreen300 = ContextCompat.getColor(itemView.context, R.color.material_green_300)
-        private val mGray300 = ContextCompat.getColor(itemView.context, R.color.material_gray_300)
+        fun bind(chat: Chat) {
+            setIsSender(FirebaseAuth.getInstance().currentUser?.uid == chat.senderId)
+            binding.chat = chat
+        }
 
         private fun setIsSender(isSender: Boolean) {
             val color: Int
             if (isSender) {
-                color = mGreen300
-                binding.leftArrow.visibility = View.GONE
-                binding.rightArrow.visibility = View.VISIBLE
-                binding.messageContainer.gravity = Gravity.END
-            } else {
-                color = mGray300
+                color = ContextCompat.getColor(itemView.context, R.color.material_green_300)
                 binding.leftArrow.visibility = View.VISIBLE
                 binding.rightArrow.visibility = View.GONE
+                binding.messageContainer.gravity = Gravity.END
+            } else {
+                color = ContextCompat.getColor(itemView.context, R.color.material_gray_300)
+                binding.leftArrow.visibility = View.GONE
+                binding.rightArrow.visibility = View.VISIBLE
                 binding.messageContainer.gravity = Gravity.START
             }
             (binding.message.background as GradientDrawable).setColor(color)
@@ -59,11 +61,6 @@ class MessageListAdapter : ListAdapter<Chat, MessageViewHolder>(ChatDiffUtil()) 
                 colorFilter
             (binding.rightArrow.background as RotateDrawable).drawable?.colorFilter =
                 colorFilter
-        }
-
-        fun bind(chat: Chat) {
-            val isSender = FirebaseAuth.getInstance().currentUser?.uid == chat.senderId
-            setIsSender(isSender)
         }
     }
 }

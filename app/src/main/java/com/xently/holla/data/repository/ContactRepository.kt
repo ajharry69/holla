@@ -5,12 +5,12 @@ import android.app.Activity
 import android.content.Context
 import android.provider.ContactsContract.CommonDataKinds.Phone
 import androidx.annotation.RequiresPermission
+import androidx.core.database.getStringOrNull
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.xently.holla.data.model.Contact
 import com.xently.holla.data.model.Contact.CREATOR.Fields.MOBILE
 import com.xently.holla.data.repository.schema.IContactRepository
-import com.xently.holla.utils.CountryISOInitialsToCode
 
 class ContactRepository internal constructor(private val context: Context) : BaseRepository(),
     IContactRepository {
@@ -28,7 +28,6 @@ class ContactRepository internal constructor(private val context: Context) : Bas
     @RequiresPermission(Manifest.permission.READ_CONTACTS)
     override suspend fun getContactList(activity: Activity): List<Contact> {
         val contactList = arrayListOf<Contact>()
-        val countryCode = CountryISOInitialsToCode.getCountryCode(context)
 
         context.contentResolver.query(
             Phone.CONTENT_URI,
@@ -39,14 +38,10 @@ class ContactRepository internal constructor(private val context: Context) : Bas
         )?.use {
             while (it.moveToNext()) {
                 val name: String = it.getString(it.getColumnIndex(Phone.DISPLAY_NAME))
-                var mobileNumber: String = it.getString(it.getColumnIndex(Phone.NUMBER))
-                    .replace(Regex("\\s|-|\\(|\\)"), "")
+                val mobileNumber = it.getStringOrNull(it.getColumnIndex(Phone.NORMALIZED_NUMBER))
+                    ?.replace(Regex("\\s|-|\\(|\\)"), "") ?: continue
 
-                // Add country code if it's not already present
-                if (mobileNumber[0].toString() != "+") mobileNumber =
-                    countryCode + mobileNumber.removePrefix("0")
                 // Skip current user's phone number
-
                 if (mobileNumber == firebaseAuth.currentUser?.phoneNumber) continue
                 val contact = Contact("", name, mobileNumber)
                 contactList.addIfRegistered(activity, contact)

@@ -15,7 +15,9 @@ data class Chat(
     val isRead: Boolean = false,
     val deleteFromSender: Boolean = false,
     val deleteFromReceiver: Boolean = false,
-    val timeSent: Timestamp = Timestamp.now()
+    val timeSent: Timestamp = Timestamp.now(),
+    val sender: Contact = Contact(id = senderId),
+    val receiver: Contact = Contact(id = receiverId)
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString()!!,
@@ -28,7 +30,9 @@ data class Chat(
         parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
-        parcel.readParcelable(Timestamp::class.java.classLoader)!!
+        parcel.readParcelable(Timestamp::class.java.classLoader)!!,
+        parcel.readParcelable(Contact::class.java.classLoader)!!,
+        parcel.readParcelable(Contact::class.java.classLoader)!!
     )
 
     /*sealed class Type {
@@ -60,6 +64,8 @@ data class Chat(
             writeByte(if (deleteFromSender) 1 else 0)
             writeByte(if (deleteFromReceiver) 1 else 0)
             writeParcelable(timeSent, flags)
+            writeParcelable(sender, flags)
+            writeParcelable(receiver, flags)
         }
     }
 
@@ -77,6 +83,8 @@ data class Chat(
         result = 31 * result + deleteFromSender.hashCode()
         result = 31 * result + deleteFromReceiver.hashCode()
         result = 31 * result + timeSent.hashCode()
+        result = 31 * result + sender.hashCode()
+        result = 31 * result + receiver.hashCode()
         return result
     }
 
@@ -97,6 +105,8 @@ data class Chat(
         if (deleteFromSender != other.deleteFromSender) return false
         if (deleteFromReceiver != other.deleteFromReceiver) return false
         if (timeSent != other.timeSent) return false
+        if (sender != other.sender) return false
+        if (receiver != other.receiver) return false
 
         return true
     }
@@ -116,7 +126,8 @@ data class Chat(
             const val TIME_SENT = "timeSent"
         }
 
-        override fun createFromParcel(parcel: Parcel): Chat = Chat(parcel)
+        override fun createFromParcel(parcel: Parcel): Chat =
+            Chat(parcel)
 
         override fun newArray(size: Int): Array<Chat?> = arrayOfNulls(size)
     }

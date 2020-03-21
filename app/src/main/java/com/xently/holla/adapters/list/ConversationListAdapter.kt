@@ -29,7 +29,7 @@ class ConversationListAdapter : ListAdapter<Chat, ChatViewHolder>(ChatDiffUtil()
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(chat: Chat) {
-
+            binding.conversation = chat
         }
     }
 }

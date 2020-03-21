@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="refresh_button_size">20dp</dimen>
+    <dimen name="message_arrow_dimen">50dp</dimen>
+    <dimen name="right_arrow_end_margin">25dp</dimen>
+    <dimen name="left_arrow_start_margin">2dp</dimen>
+    <dimen name="message_text_padding">10dp</dimen>
+    <dimen name="message_text_end_margins">26dp</dimen>
+    <dimen name="message_item_container_vertical_padding">5dp</dimen>
 </resources>
