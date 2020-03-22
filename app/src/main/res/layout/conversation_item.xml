@@ -35,7 +35,7 @@
             android:id="@+id/name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@{ conversation.conversationContact.mobileNumber ?? @string/default_name}"
+            android:text="@{ conversation.conversationName ?? @string/default_name}"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@id/message"
