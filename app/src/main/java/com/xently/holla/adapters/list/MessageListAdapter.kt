@@ -10,7 +10,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.auth.FirebaseAuth
 import com.xently.holla.R
 import com.xently.holla.adapters.list.MessageListAdapter.MessageViewHolder
 import com.xently.holla.data.model.Chat
@@ -37,7 +36,7 @@ class MessageListAdapter : ListAdapter<Chat, MessageViewHolder>(ChatDiffUtil()) 
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(chat: Chat) {
-            setIsSender(FirebaseAuth.getInstance().currentUser?.uid == chat.senderId)
+            setIsSender(chat.isSender)
             binding.chat = chat
         }
 

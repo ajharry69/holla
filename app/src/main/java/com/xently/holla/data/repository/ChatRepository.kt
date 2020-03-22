@@ -2,10 +2,10 @@ package com.xently.holla.data.repository
 
 import android.content.Context
 import android.provider.ContactsContract.CommonDataKinds.Phone
-import androidx.core.database.getStringOrNull
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
+import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
@@ -17,14 +17,16 @@ import com.xently.holla.data.repository.schema.IChatRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import java.util.concurrent.Executor
 
 class ChatRepository internal constructor(private val context: Context) : BaseRepository(),
     IChatRepository {
 
-    private val observableMessageList = MutableLiveData<List<Chat>>(emptyList())
+    private val observableMessageList = MutableLiveData<List<Chat>>(null)
 
     override suspend fun getObservableConversations(contact: Contact?): LiveData<List<Chat>> {
         return Transformations.map(observableMessageList) { chatList ->
+            if (chatList == null) return@map null
             if (contact == null) chatList else {
                 chatList.filter { it.receiverId == contact.id }
                     .sortedByDescending { it.timeSent }
@@ -51,16 +53,23 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
         val currentUser = firebaseAuth.currentUser ?: return null
         val currentUserId = currentUser.uid
 //        val query = messagesCollection.whereEqualTo(Fields.SENDER, currentUserId)
+//            .whereEqualTo(Fields.RECEIVER, currentUserId)
         return messagesCollection.orderBy(Fields.TIME_SENT, Query.Direction.DESCENDING)
             .addSnapshotListener { querySnapshot, exception ->
                 if (exception != null) {
+                    refreshList(emptyList())
                     setException(exception)
                     return@addSnapshotListener
                 }
 
-                if (querySnapshot == null || querySnapshot.isEmpty) return@addSnapshotListener
+                if (querySnapshot == null || querySnapshot.isEmpty) {
+                    refreshList(emptyList())
+                    return@addSnapshotListener
+                }
 
                 val chatList = querySnapshot.toObjects(Chat::class.java)
+
+                Log.show("FCMService", "Fetched Chats Count: ${chatList.size}") // TODO
 
                 val chats = if (contact == null) chatList.conversations else chatList
 
@@ -68,49 +77,22 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
                 for (chat in chats) {
                     when {
                         chat.senderId == currentUserId -> {
-                            val sender = chat.sender.copy(mobileNumber = currentUser.phoneNumber)
+                            val sender = chat.sender.copy(
+                                id = currentUserId,
+                                mobileNumber = currentUser.phoneNumber
+                            ).local
                             getContactFromSenderOrReceiverID(chat.receiverId) {
                                 nc.add(chat.copy(sender = sender, receiver = it))
                                 refreshList(nc)
                             }
                         }
                         chat.receiverId == currentUserId -> {
-                            val receiver =
-                                chat.receiver.copy(mobileNumber = currentUser.phoneNumber)
+                            val receiver = chat.receiver.copy(
+                                id = currentUserId,
+                                mobileNumber = currentUser.phoneNumber
+                            ).local
                             getContactFromSenderOrReceiverID(chat.senderId) {
                                 nc.add(chat.copy(receiver = receiver, sender = it))
-                                refreshList(nc)
-                            }
-                        }
-                        else -> {
-                            var currentChatPos: Int
-                            getContactFromSenderOrReceiverID(chat.sender.id) { contact1 ->
-                                val currentChat = nc.firstOrNull { it.id == chat.id }
-                                    ?: return@getContactFromSenderOrReceiverID nc.add(
-                                        chat.copy(
-                                            sender = contact1
-                                        )
-                                    )
-                                val c = currentChat.copy(sender = contact1)
-                                currentChatPos = nc.indexOf(currentChat)
-                                // Chat already added
-                                if (currentChatPos > 0) {
-                                    nc[currentChatPos] = c
-                                } else nc.add(c)
-                                refreshList(nc)
-                            }
-                            getContactFromSenderOrReceiverID(chat.receiver.id) { contact1 ->
-                                val currentChat = nc.firstOrNull { it.id == chat.id }
-                                    ?: return@getContactFromSenderOrReceiverID nc.add(
-                                        chat.copy(
-                                            receiver = contact1
-                                        )
-                                    )
-                                val c = currentChat.copy(receiver = contact1)
-                                currentChatPos = nc.indexOf(currentChat)
-                                if (currentChatPos > 0) {
-                                    nc[currentChatPos] = c
-                                } else nc.add(c)
                                 refreshList(nc)
                             }
                         }
@@ -154,13 +136,7 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
             )?.use {
                 while (it.moveToNext()) {
                     val name: String = it.getString(it.getColumnIndex(Phone.DISPLAY_NAME))
-                    val phone = it.getStringOrNull(it.getColumnIndex(Phone.NORMALIZED_NUMBER))
-
                     contact = contact.copy(name = name)
-                    Log.show(
-                        "FCMService",
-                        "Phone: {${contact.mobileNumber} = $phone} Name: {$name}"
-                    ) // TODO
                 }
             }
 
@@ -171,7 +147,7 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
         get() {
             val conversations = arrayListOf<Chat>()
             // Group chats by recipients(contact) id then scan through each of them to get the latest
-            for (group in groupBy { it.receiverId }) {
+            for (group in groupBy { it.conversationContact.id }) {
                 // Add the latest message to the conversation list
                 conversations.add(group.value.sortedByDescending { it.timeSent }[0])
             }

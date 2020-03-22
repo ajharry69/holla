@@ -1,10 +1,8 @@
 package com.xently.holla.ui.list.conversation
 
 import android.content.Context
-import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
 import androidx.navigation.findNavController
 import com.xently.holla.App
@@ -37,6 +35,6 @@ class ConversationListFragment : ChatListFragment() {
     }
 
     override fun onListItemClick(model: Chat, view: View) {
-        view.findNavController().navigate(actionMessage(model.receiver))
+        view.findNavController().navigate(actionMessage(model.conversationContact))
     }
 }

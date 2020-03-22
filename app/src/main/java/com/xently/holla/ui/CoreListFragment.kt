@@ -71,7 +71,7 @@ abstract class CoreListFragment<T> : ListFragment<T>(), FirebaseAuth.AuthStateLi
     }
 
     override fun onAuthStateChanged(p0: FirebaseAuth) {
-
+        if (p0.currentUser != null) onRefreshRequested(false)
     }
 
     companion object {

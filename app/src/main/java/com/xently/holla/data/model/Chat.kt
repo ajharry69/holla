@@ -3,6 +3,7 @@ package com.xently.holla.data.model
 import android.os.Parcel
 import android.os.Parcelable
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Exclude
 
 data class Chat(
@@ -20,6 +21,18 @@ data class Chat(
     @get:Exclude val sender: Contact = Contact(id = senderId),
     @get:Exclude val receiver: Contact = Contact(id = receiverId)
 ) : Parcelable {
+    @get:Exclude
+    val isSender: Boolean
+        get() = FirebaseAuth.getInstance().currentUser?.uid == senderId
+
+    @get:Exclude
+    val conversationName: String?
+        get() = conversationContact.name
+
+    @get:Exclude
+    val conversationContact: Contact
+        get() = if (isSender) receiver else sender
+
     constructor(parcel: Parcel) : this(
         parcel.readString()!!,
         parcel.readString(),

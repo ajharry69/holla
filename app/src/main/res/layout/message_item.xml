@@ -8,7 +8,7 @@
 
         <variable
             name="chat"
-            type="com.xently.holla.data.model.Chat" />
+            type="Chat" />
     </data>
 
     <RelativeLayout

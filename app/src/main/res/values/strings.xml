@@ -46,4 +46,5 @@
     <string name="content_desc_send_message">Send message</string>
     <string name="read_contacts_permission_required">Read contacts permission is required!</string>
     <string name="allow">Allow</string>
+    <string name="loading">Loading…</string>
 </resources>
