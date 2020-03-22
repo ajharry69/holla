@@ -6,9 +6,7 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.xently.holla.data.model.Chat
 import com.xently.holla.data.model.Contact
 
-interface IChatRepository {
-
-    fun getObservableException(): LiveData<Exception>
+interface IChatRepository : IBaseRepository {
 
     /**
      * returns an [LiveData] observable list of chats for [contact] if it's not null otherwise

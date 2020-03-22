@@ -1,6 +1,5 @@
 package com.xently.holla.viewmodels
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.xently.holla.data.model.Chat
@@ -8,8 +7,7 @@ import com.xently.holla.data.model.Contact
 import com.xently.holla.data.repository.schema.IChatRepository
 import kotlinx.coroutines.runBlocking
 
-abstract class ChatViewModel(private val repository: IChatRepository) : ViewModel() {
-    fun getObservableException() = repository.getObservableException()
+abstract class ChatViewModel(private val repository: IChatRepository) : BaseViewModel(repository) {
 
     fun getObservableConversations(contact: Contact?) = liveData(viewModelScope.coroutineContext) {
         emitSource(repository.getObservableConversations(contact))

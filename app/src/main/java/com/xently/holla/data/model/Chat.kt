@@ -3,6 +3,7 @@ package com.xently.holla.data.model
 import android.os.Parcel
 import android.os.Parcelable
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.Exclude
 
 data class Chat(
     val id: String = "",
@@ -11,13 +12,13 @@ data class Chat(
     val senderId: String = "", // Will be picked from the currently signed in user's ID
     val type: Type = Type.Text,
     val mediaUrl: String? = null,
-    val isSent: Boolean = true,
-    val isRead: Boolean = false,
+    val sent: Boolean = true,
+    val read: Boolean = false,
     val deleteFromSender: Boolean = false,
     val deleteFromReceiver: Boolean = false,
     val timeSent: Timestamp = Timestamp.now(),
-    val sender: Contact = Contact(id = senderId),
-    val receiver: Contact = Contact(id = receiverId)
+    @get:Exclude val sender: Contact = Contact(id = senderId),
+    @get:Exclude val receiver: Contact = Contact(id = receiverId)
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString()!!,
@@ -59,8 +60,8 @@ data class Chat(
             writeString(senderId)
             writeString(type.name)
             writeString(mediaUrl)
-            writeByte(if (isSent) 1 else 0)
-            writeByte(if (isRead) 1 else 0)
+            writeByte(if (sent) 1 else 0)
+            writeByte(if (read) 1 else 0)
             writeByte(if (deleteFromSender) 1 else 0)
             writeByte(if (deleteFromReceiver) 1 else 0)
             writeParcelable(timeSent, flags)
@@ -78,8 +79,8 @@ data class Chat(
         result = 31 * result + senderId.hashCode()
         result = 31 * result + type.hashCode()
         result = 31 * result + mediaUrl.hashCode()
-        result = 31 * result + isSent.hashCode()
-        result = 31 * result + isRead.hashCode()
+        result = 31 * result + sent.hashCode()
+        result = 31 * result + read.hashCode()
         result = 31 * result + deleteFromSender.hashCode()
         result = 31 * result + deleteFromReceiver.hashCode()
         result = 31 * result + timeSent.hashCode()
@@ -100,8 +101,8 @@ data class Chat(
         if (senderId != other.senderId) return false
         if (type != other.type) return false
         if (mediaUrl != other.mediaUrl) return false
-        if (isSent != other.isSent) return false
-        if (isRead != other.isRead) return false
+        if (sent != other.sent) return false
+        if (read != other.read) return false
         if (deleteFromSender != other.deleteFromSender) return false
         if (deleteFromReceiver != other.deleteFromReceiver) return false
         if (timeSent != other.timeSent) return false
@@ -119,8 +120,8 @@ data class Chat(
             const val SENDER = "senderId"
             const val TYPE = "type"
             const val MEDIA_URL = "mediaUrl"
-            const val SENT = "isSent"
-            const val READ = "isRead"
+            const val SENT = "sent"
+            const val READ = "read"
             const val DELETE_FROM_SENDER = "deleteFromSender"
             const val DELETE_FROM_RECEIVER = "deleteFromReceiver"
             const val TIME_SENT = "timeSent"

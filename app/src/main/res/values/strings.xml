@@ -44,4 +44,6 @@
     <string name="no_messages"><![CDATA[No messages yet! Compose & send a new one below]]></string>
     <string name="content_desc_attach_file">Attach file</string>
     <string name="content_desc_send_message">Send message</string>
+    <string name="read_contacts_permission_required">Read contacts permission is required!</string>
+    <string name="allow">Allow</string>
 </resources>

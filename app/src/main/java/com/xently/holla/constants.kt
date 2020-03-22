@@ -1,14 +1,10 @@
 package com.xently.holla
 
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
-import android.view.View
-import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import com.google.android.material.snackbar.Snackbar
 import com.xently.holla.Log.Type.*
 
 object FBCollection {
@@ -94,43 +90,6 @@ object Log {
         show(tag, "$message", throwable, type)
     }
 }
-
-/**
- * Shows [Snackbar] for given `duration`
- * @param context
- * @param view
- * @param duration: @see Snackbar.getDuration
- * @param message: [Snackbar] message
- * @param actionButtonClick: Callback for responding to [Snackbar] action button click
- * @param actionButtonText: Label text shown on [Snackbar]s action button
- */
-fun showSnackBar(
-    view: View,
-    message: String?,
-    duration: Int = Snackbar.LENGTH_SHORT, actionButtonText: String? = null,
-    actionButtonClick: ((snackBar: Snackbar) -> Unit)? = null
-) {
-    if (message == null) return
-    val snackbar = Snackbar.make(view, message, duration)
-    with(snackbar) {
-        setActionTextColor(ContextCompat.getColor(context, R.color.colorAccent))
-        if (actionButtonText != null) setAction(actionButtonText) {
-            actionButtonClick?.invoke(this)
-        }
-        if (!this.isShownOrQueued) show()
-    }
-}
-
-fun showSnackBar(
-    context: Context,
-    view: View,
-    @StringRes message: Int,
-    duration: Int = Snackbar.LENGTH_SHORT, actionButtonText: String? = null,
-    actionButtonClick: ((snackBar: Snackbar) -> Unit)? = null
-) {
-    showSnackBar(view, context.getString(message), duration, actionButtonText, actionButtonClick)
-}
-
 
 /**
  * @param permission permission requested for. Input should be from Manifest permission constants

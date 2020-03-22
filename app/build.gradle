@@ -87,7 +87,7 @@ dependencies {
     implementation 'de.hdodenhof:circleimageview:3.1.0'
     implementation 'joda-time:joda-time:2.10.3'
     implementation "com.xently.xui:dialog:$xently_ui_version"
-    implementation "com.xently.xui:core:$xently_ui_version"
+    implementation "com.xently.xui:core:${xently_ui_version}"
 
     // Tests
     androidTestImplementation "androidx.navigation:navigation-testing:$nav_version"

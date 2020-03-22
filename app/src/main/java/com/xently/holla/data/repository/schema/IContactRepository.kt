@@ -9,7 +9,7 @@ import com.xently.holla.data.model.Contact
  * (already members of Holla) and saved as part of currently signed in user's phone contacts(saved
  * in phone)
  */
-interface IContactRepository {
+interface IContactRepository : IBaseRepository {
     suspend fun getContactList(activity: Activity): List<Contact>
 
     suspend fun getObservableContactList(): LiveData<List<Contact>>

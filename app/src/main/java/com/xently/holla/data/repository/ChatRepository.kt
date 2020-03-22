@@ -2,12 +2,14 @@ package com.xently.holla.data.repository
 
 import android.content.Context
 import android.provider.ContactsContract.CommonDataKinds.Phone
+import androidx.core.database.getStringOrNull
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
+import com.xently.holla.Log
 import com.xently.holla.data.model.Chat
 import com.xently.holla.data.model.Chat.CREATOR.Fields
 import com.xently.holla.data.model.Contact
@@ -19,10 +21,7 @@ import kotlinx.coroutines.withContext
 class ChatRepository internal constructor(private val context: Context) : BaseRepository(),
     IChatRepository {
 
-    private val observableException = MutableLiveData<Exception>()
     private val observableMessageList = MutableLiveData<List<Chat>>(emptyList())
-
-    override fun getObservableException(): LiveData<Exception> = observableException
 
     override suspend fun getObservableConversations(contact: Contact?): LiveData<List<Chat>> {
         return Transformations.map(observableMessageList) { chatList ->
@@ -37,6 +36,9 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
         val messageId = messagesCollection.document().id
         return messagesCollection.document(messageId)
             .set(message.copy(id = messageId, senderId = firebaseAuth.currentUser?.uid.toString()))
+            .addOnCompleteListener {
+                if (it.exception != null) setException(it.exception)
+            }
     }
 
     override suspend fun deleteMessage(message: Chat): Task<Void> {
@@ -49,11 +51,7 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
         val currentUser = firebaseAuth.currentUser ?: return null
         val currentUserId = currentUser.uid
 //        val query = messagesCollection.whereEqualTo(Fields.SENDER, currentUserId)
-        return if (contact == null) {
-            messagesCollection.whereEqualTo(Fields.SENDER, currentUserId)
-        } else {
-            messagesCollection
-        }.orderBy(Fields.TIME_SENT, Query.Direction.DESCENDING)
+        return messagesCollection.orderBy(Fields.TIME_SENT, Query.Direction.DESCENDING)
             .addSnapshotListener { querySnapshot, exception ->
                 if (exception != null) {
                     setException(exception)
@@ -64,9 +62,7 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
 
                 val chatList = querySnapshot.toObjects(Chat::class.java)
 
-                val (chats, observable) = if (contact == null) {
-                    Pair(chatList.getConversations(), observableMessageList)
-                } else Pair(chatList, observableMessageList)
+                val chats = if (contact == null) chatList.conversations else chatList
 
                 val nc = arrayListOf<Chat>()
                 for (chat in chats) {
@@ -75,7 +71,7 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
                             val sender = chat.sender.copy(mobileNumber = currentUser.phoneNumber)
                             getContactFromSenderOrReceiverID(chat.receiverId) {
                                 nc.add(chat.copy(sender = sender, receiver = it))
-                                observable.refreshList(nc)
+                                refreshList(nc)
                             }
                         }
                         chat.receiverId == currentUserId -> {
@@ -83,7 +79,7 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
                                 chat.receiver.copy(mobileNumber = currentUser.phoneNumber)
                             getContactFromSenderOrReceiverID(chat.senderId) {
                                 nc.add(chat.copy(receiver = receiver, sender = it))
-                                observable.refreshList(nc)
+                                refreshList(nc)
                             }
                         }
                         else -> {
@@ -101,7 +97,7 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
                                 if (currentChatPos > 0) {
                                     nc[currentChatPos] = c
                                 } else nc.add(c)
-                                observable.refreshList(nc)
+                                refreshList(nc)
                             }
                             getContactFromSenderOrReceiverID(chat.receiver.id) { contact1 ->
                                 val currentChat = nc.firstOrNull { it.id == chat.id }
@@ -115,7 +111,7 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
                                 if (currentChatPos > 0) {
                                     nc[currentChatPos] = c
                                 } else nc.add(c)
-                                observable.refreshList(nc)
+                                refreshList(nc)
                             }
                         }
                     }
@@ -136,6 +132,16 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
             }
     }
 
+    private suspend fun MutableLiveData<List<Chat>>.deleteChatIfPresent(message: Chat) {
+        withContext(Dispatchers.Default) {
+            value?.filter { it == message }?.let { refreshList(it) }
+        }
+    }
+
+    private fun refreshList(list: List<Chat>?) {
+        observableMessageList.value = list
+    }
+
     private val Contact.local: Contact
         get() {
             var contact = this
@@ -148,37 +154,27 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
             )?.use {
                 while (it.moveToNext()) {
                     val name: String = it.getString(it.getColumnIndex(Phone.DISPLAY_NAME))
+                    val phone = it.getStringOrNull(it.getColumnIndex(Phone.NORMALIZED_NUMBER))
 
                     contact = contact.copy(name = name)
+                    Log.show(
+                        "FCMService",
+                        "Phone: {${contact.mobileNumber} = $phone} Name: {$name}"
+                    ) // TODO
                 }
             }
 
             return contact
         }
 
-    private suspend fun MutableLiveData<List<Chat>>.deleteChatIfPresent(message: Chat) {
-        withContext(Dispatchers.Default) {
-            value?.filter { it == message }?.let { refreshList(it) }
+    private val List<Chat>.conversations: List<Chat>
+        get() {
+            val conversations = arrayListOf<Chat>()
+            // Group chats by recipients(contact) id then scan through each of them to get the latest
+            for (group in groupBy { it.receiverId }) {
+                // Add the latest message to the conversation list
+                conversations.add(group.value.sortedByDescending { it.timeSent }[0])
+            }
+            return conversations.sortedByDescending { it.timeSent }
         }
-    }
-
-    private fun MutableLiveData<List<Chat>>.refreshList(list: List<Chat>) = postValue(list)
-
-    private fun List<Chat>.getConversations(): List<Chat> {
-        val conversations = arrayListOf<Chat>()
-        // Group chats by recipients(contact) id then scan through each of them to get the latest
-        for (group in this@getConversations.groupBy { it.receiverId }) {
-            // Add the latest message to the conversation list
-            conversations.add(group.value.sortedByDescending { it.timeSent }[0])
-        }
-        return conversations
-    }
-
-    private fun setException(ex: Exception?) {
-        observableException.value = ex
-    }
-
-    companion object {
-        private val LOG_TAG = ChatRepository::class.java.simpleName
-    }
 }

@@ -23,8 +23,9 @@ class App : MultiDexApplication() {
     val contactRepository: IContactRepository
         get() = ServiceLocator.provideContactRepository(this)
 
-    override fun onCreate() {
-        super.onCreate()
+    override fun attachBaseContext(base: Context?) {
+        super.attachBaseContext(base)
+
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true)
     }
 }

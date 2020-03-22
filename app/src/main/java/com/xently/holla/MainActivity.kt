@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.viewModels
+import androidx.annotation.StringRes
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.navigation.NavController
@@ -17,11 +18,13 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUserMetadata
 import com.xently.holla.Log.Type.ERROR
 import com.xently.holla.databinding.MainActivityBinding
 import com.xently.xui.SearchableActivity
+import com.xently.xui.utils.showSnackBar
 
 class MainActivity : SearchableActivity() {
 
@@ -101,7 +104,7 @@ class MainActivity : SearchableActivity() {
         if (metadata.creationTimestamp == metadata.lastSignInTimestamp) {
             // The user is new, show them a fancy intro screen!
             viewModel.addClient(currentUser).addOnCompleteListener(this) {
-                if (!it.isSuccessful) showSnackBar(this, binding.root, R.string.sign_in_failed)
+                if (!it.isSuccessful) showSnackBar(R.string.sign_in_failed)
             }
         }
     }
@@ -112,10 +115,10 @@ class MainActivity : SearchableActivity() {
         when {
             response == null -> finish() // User pressed back button
             response.error?.errorCode == ErrorCodes.NO_NETWORK -> {
-                showSnackBar(this, binding.root, R.string.no_internet_connection)
+                showSnackBar(R.string.no_internet_connection)
             }
             else -> {
-                showSnackBar(this, binding.root, R.string.unknown_error)
+                showSnackBar(R.string.unknown_error)
                 Log.show(
                     LOG_TAG,
                     "Sign-in error: ${response.error?.message}",
@@ -125,6 +128,12 @@ class MainActivity : SearchableActivity() {
             }
         }
     }
+
+    private fun showSnackBar(
+        @StringRes message: Int,
+        duration: Int = Snackbar.LENGTH_SHORT, actionButtonText: String? = null,
+        actionButtonClick: ((snackBar: Snackbar) -> Unit)? = null
+    ): Snackbar = showSnackBar(binding.root, message, duration, actionButtonText, actionButtonClick)
 
     companion object {
         private const val RC_SIGN_IN = 1234

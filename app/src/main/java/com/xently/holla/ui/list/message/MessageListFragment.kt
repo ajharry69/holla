@@ -5,24 +5,21 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentFactory
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.snackbar.Snackbar
 import com.xently.holla.App
 import com.xently.holla.R
 import com.xently.holla.adapters.list.MessageListAdapter
 import com.xently.holla.data.model.Chat
 import com.xently.holla.data.model.Contact
-import com.xently.holla.showSnackBar
 import com.xently.holla.ui.list.ChatListFragment
 import com.xently.holla.viewmodels.ChatViewModel
 
 class MessageListFragment : ChatListFragment() {
     private val args: MessageListFragmentArgs by navArgs()
 
-    private val contact: Contact? by lazy {
+    override val contact: Contact? by lazy {
         arguments?.getParcelable(ARG_KEY_CONTACT) ?: args.argsContact
     }
 
@@ -39,21 +36,6 @@ class MessageListFragment : ChatListFragment() {
         }
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-
-        onRefreshRequested(false)
-        viewModel.getObservableConversations(contact).observe(viewLifecycleOwner, Observer {
-            onObservableListChanged(it)
-
-            listAdapter.submitList(it)
-        })
-        viewModel.getObservableException().observe(viewLifecycleOwner, Observer {
-            if (it == null) return@Observer
-            showSnackBar(binding.root, it.message, Snackbar.LENGTH_LONG)
-        })
-    }
-
     override fun onListItemClick(model: Chat, view: View) = Unit
 
     override fun onCreateRecyclerView(recyclerView: RecyclerView): RecyclerView {
@@ -68,10 +50,6 @@ class MessageListFragment : ChatListFragment() {
                 }
             }
         }
-    }
-
-    override fun onRefreshRequested(forced: Boolean) {
-        viewModel.getConversations(contact)
     }
 
     companion object {

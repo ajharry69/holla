@@ -5,7 +5,7 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseUser
 import com.xently.holla.data.model.Contact
 
-interface IUserRepository {
+interface IUserRepository : IBaseRepository {
     val contact: Contact?
 
     val observableContact: LiveData<Contact>

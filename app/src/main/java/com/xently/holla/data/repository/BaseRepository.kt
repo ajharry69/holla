@@ -2,6 +2,8 @@
 
 package com.xently.holla.data.repository
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -9,8 +11,9 @@ import com.google.firebase.firestore.SnapshotMetadata
 import com.google.firebase.storage.FirebaseStorage
 import com.xently.holla.FBCollection.MESSAGES
 import com.xently.holla.FBCollection.USERS
+import com.xently.holla.data.repository.schema.IBaseRepository
 
-abstract class BaseRepository {
+abstract class BaseRepository : IBaseRepository {
     protected val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
     protected val firebaseFirestore: FirebaseFirestore = FirebaseFirestore.getInstance()
     protected val firebaseStorage: FirebaseStorage = FirebaseStorage.getInstance()
@@ -20,6 +23,14 @@ abstract class BaseRepository {
 
     protected val SnapshotMetadata.source: Source
         get() = if (hasPendingWrites()) Source.LOCAL else Source.REMOTE
+
+    private val observableException = MutableLiveData<Exception>()
+
+    override fun getObservableException(): LiveData<Exception> = observableException
+
+    protected fun setException(ex: Exception?) {
+        observableException.value = ex
+    }
 
     enum class Source { REMOTE, LOCAL }
 }

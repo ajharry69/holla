@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
@@ -12,7 +13,6 @@ import com.xently.holla.App
 import com.xently.holla.data.model.Chat
 import com.xently.holla.data.model.Contact
 import com.xently.holla.databinding.MessageFragmentBinding
-import com.xently.holla.showSnackBar
 import com.xently.holla.ui.list.message.MessageListFragment
 import com.xently.xui.Fragment
 import com.xently.xui.adapters.viewpager.FragmentPagerAdapter
@@ -61,15 +61,22 @@ class MessageFragment : Fragment(), FirebaseAuth.AuthStateListener {
                     receiverId = contact.id
                 )
             ).addOnCompleteListener {
-                if (it.isSuccessful) {
-                    clearText(binding.message)
-                } else showSnackBar(binding.root, it.exception?.message, Snackbar.LENGTH_LONG)
+                if (it.isSuccessful) clearText(binding.message)
             }
         }
         binding.messageContainer.setStartIconOnClickListener {
             hideKeyboard()
-            showSnackBar(binding.root, "Coming soon!")
+            showSnackBar("Coming soon!")
         }
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+        viewModel.getObservableException().observe(viewLifecycleOwner, Observer {
+            if (it == null) return@Observer
+            it.message?.let { it1 -> showSnackBar(it1, Snackbar.LENGTH_LONG) }
+        })
     }
 
     override fun onAuthStateChanged(p0: FirebaseAuth) {

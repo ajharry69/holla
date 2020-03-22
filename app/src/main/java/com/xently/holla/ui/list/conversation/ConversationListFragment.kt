@@ -31,20 +31,6 @@ class ConversationListFragment : ChatListFragment() {
     override val noDataText: CharSequence?
         get() = getString(R.string.no_conversations)
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        onRefreshRequested(false)
-        viewModel.getObservableConversations(null).observe(viewLifecycleOwner, Observer {
-            onObservableListChanged(it)
-
-            listAdapter.submitList(it)
-        })
-    }
-
-    override fun onRefreshRequested(forced: Boolean) {
-        viewModel.getConversations(null)
-    }
-
     override fun onFabClickListener(context: Context): View.OnClickListener? {
         binding.fab.setImageResource(R.drawable.ic_chat)
         return Navigation.createNavigateOnClickListener(actionContactList())
