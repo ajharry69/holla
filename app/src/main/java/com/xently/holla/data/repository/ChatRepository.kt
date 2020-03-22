@@ -5,10 +5,8 @@ import android.provider.ContactsContract.CommonDataKinds.Phone
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
-import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
-import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.Query
+import com.google.firebase.auth.FirebaseUser
 import com.xently.holla.Log
 import com.xently.holla.data.model.Chat
 import com.xently.holla.data.model.Chat.CREATOR.Fields
@@ -16,21 +14,21 @@ import com.xently.holla.data.model.Contact
 import com.xently.holla.data.repository.schema.IChatRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.util.concurrent.Executor
 
 class ChatRepository internal constructor(private val context: Context) : BaseRepository(),
     IChatRepository {
 
+    private val observableConversationList = MutableLiveData<List<Chat>>(null)
     private val observableMessageList = MutableLiveData<List<Chat>>(null)
 
     override suspend fun getObservableConversations(contact: Contact?): LiveData<List<Chat>> {
-        return Transformations.map(observableMessageList) { chatList ->
+        return if (contact == null) observableConversationList else Transformations.map(
+            observableMessageList
+        ) { chatList ->
             if (chatList == null) return@map null
-            if (contact == null) chatList else {
-                chatList.filter { it.receiverId == contact.id }
-                    .sortedByDescending { it.timeSent }
-            }
+            chatList.sortedByDescending { it.timeSent }
         }
     }
 
@@ -49,79 +47,40 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
         }
     }
 
-    override suspend fun getConversations(contact: Contact?): ListenerRegistration? {
-        val currentUser = firebaseAuth.currentUser ?: return null
-        val currentUserId = currentUser.uid
-//        val query = messagesCollection.whereEqualTo(Fields.SENDER, currentUserId)
-//            .whereEqualTo(Fields.RECEIVER, currentUserId)
-        return messagesCollection.orderBy(Fields.TIME_SENT, Query.Direction.DESCENDING)
-            .addSnapshotListener { querySnapshot, exception ->
-                if (exception != null) {
-                    refreshList(emptyList())
-                    setException(exception)
-                    return@addSnapshotListener
-                }
+    override suspend fun getConversations(contact: Contact?): List<Chat> {
+        val observable = if (contact == null) observableConversationList else observableMessageList
+        try {
+            val currentUser =
+                firebaseAuth.currentUser ?: throw Exception("Authentication is required")
+            val currentUserId = currentUser.uid
+            val chatListAsSender = if (contact == null) {
+                messagesCollection.whereEqualTo(Fields.SENDER, currentUserId)
+            } else {
+                messagesCollection.whereEqualTo(Fields.SENDER, contact.id)
+                    .whereEqualTo(Fields.RECEIVER, currentUserId)
+            }.get().await().toObjects(Chat::class.java)
 
-                if (querySnapshot == null || querySnapshot.isEmpty) {
-                    refreshList(emptyList())
-                    return@addSnapshotListener
-                }
+            val chatListAsReceiver = if (contact == null) {
+                messagesCollection.whereEqualTo(Fields.RECEIVER, currentUserId)
+            } else {
+                messagesCollection.whereEqualTo(Fields.RECEIVER, contact.id)
+                    .whereEqualTo(Fields.SENDER, currentUserId)
+            }.get().await().toObjects(Chat::class.java)
 
-                val chatList = querySnapshot.toObjects(Chat::class.java)
+            val chatList = if (contact == null) {
+                (chatListAsReceiver + chatListAsSender).getConversations(currentUser)
+            } else {
+                (chatListAsReceiver + chatListAsSender)
+            }.withContacts(currentUser)
 
-                Log.show("FCMService", "Fetched Chats Count: ${chatList.size}") // TODO
+            observable.refreshList(chatList)
 
-                val chats = if (contact == null) chatList.conversations else chatList
-
-                val nc = arrayListOf<Chat>()
-                for (chat in chats) {
-                    when {
-                        chat.senderId == currentUserId -> {
-                            val sender = chat.sender.copy(
-                                id = currentUserId,
-                                mobileNumber = currentUser.phoneNumber
-                            ).local
-                            getContactFromSenderOrReceiverID(chat.receiverId) {
-                                nc.add(chat.copy(sender = sender, receiver = it))
-                                refreshList(nc)
-                            }
-                        }
-                        chat.receiverId == currentUserId -> {
-                            val receiver = chat.receiver.copy(
-                                id = currentUserId,
-                                mobileNumber = currentUser.phoneNumber
-                            ).local
-                            getContactFromSenderOrReceiverID(chat.senderId) {
-                                nc.add(chat.copy(receiver = receiver, sender = it))
-                                refreshList(nc)
-                            }
-                        }
-                    }
-                }
-            }
-    }
-
-    private fun getContactFromSenderOrReceiverID(id: String, withContact: ((Contact) -> Any?)?) {
-        usersCollection.whereEqualTo(Contact.CREATOR.Fields.ID, id).limit(1).get()
-            .addOnCompleteListener {
-                if (it.isSuccessful && it.result != null) {
-                    for (snapshot in it.result!!) {
-                        if (snapshot.exists()) {
-                            withContact?.invoke(snapshot.toObject(Contact::class.java).local)
-                        }
-                    }
-                }
-            }
-    }
-
-    private suspend fun MutableLiveData<List<Chat>>.deleteChatIfPresent(message: Chat) {
-        withContext(Dispatchers.Default) {
-            value?.filter { it == message }?.let { refreshList(it) }
+            return chatList
+        } catch (ex: Exception) {
+            setException(ex)
+            observable.refreshList(emptyList())
+            return emptyList()
         }
-    }
-
-    private fun refreshList(list: List<Chat>?) {
-        observableMessageList.value = list
     }
 
     private val Contact.local: Contact
@@ -143,14 +102,62 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
             return contact
         }
 
-    private val List<Chat>.conversations: List<Chat>
-        get() {
+    private suspend fun List<Chat>.getConversations(user: FirebaseUser): List<Chat> =
+        withContext(Dispatchers.Default) {
             val conversations = arrayListOf<Chat>()
             // Group chats by recipients(contact) id then scan through each of them to get the latest
-            for (group in groupBy { it.conversationContact.id }) {
+            val g1 = groupBy { it.senderId }
+            for (group in g1) {
                 // Add the latest message to the conversation list
                 conversations.add(group.value.sortedByDescending { it.timeSent }[0])
             }
-            return conversations.sortedByDescending { it.timeSent }
+            conversations.sortedByDescending { it.timeSent }
         }
+
+    private suspend fun List<Chat>.withContacts(user: FirebaseUser): ArrayList<Chat> {
+        val userId = user.uid
+        val chatList = arrayListOf<Chat>()
+
+        for (chat in this) {
+            when {
+                chat.senderId == userId -> {
+                    val sender = chat.sender.copy(
+                        id = userId,
+                        mobileNumber = user.phoneNumber
+                    ).local
+                    val receiver =
+                        usersCollection.whereEqualTo(Contact.CREATOR.Fields.ID, chat.receiverId)
+                            .limit(1).get().await()
+                    chatList += chat.copy(
+                        sender = sender,
+                        receiver = receiver.getObject(chat.receiver).local
+                    )
+                }
+                chat.receiverId == userId -> {
+                    val receiver = chat.receiver.copy(
+                        id = userId,
+                        mobileNumber = user.phoneNumber
+                    ).local
+                    val sender =
+                        usersCollection.whereEqualTo(Contact.CREATOR.Fields.ID, chat.senderId)
+                            .limit(1).get().await()
+                    chatList += chat.copy(
+                        sender = sender.getObject(chat.sender).local,
+                        receiver = receiver
+                    )
+                }
+            }
+        }
+        return chatList
+    }
+
+    private suspend fun MutableLiveData<List<Chat>>.deleteChatIfPresent(message: Chat) {
+        withContext(Dispatchers.Default) {
+            value?.filter { it == message }?.let { refreshList(it) }
+        }
+    }
+
+    private fun MutableLiveData<List<Chat>>.refreshList(list: List<Chat>?) {
+        postValue(list)
+    }
 }

@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.xently.holla.data.model.Chat
 import com.xently.holla.data.model.Contact
 import com.xently.holla.data.repository.schema.IChatRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 abstract class ChatViewModel(private val repository: IChatRepository) : BaseViewModel(repository) {
@@ -21,7 +23,9 @@ abstract class ChatViewModel(private val repository: IChatRepository) : BaseView
         repository.deleteMessage(message)
     }
 
-    fun getConversations(contact: Contact?) = runBlocking(viewModelScope.coroutineContext) {
-        repository.getConversations(contact)
+    fun getConversations(contact: Contact?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.getConversations(contact)
+        }
     }
 }

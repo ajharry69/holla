@@ -20,5 +20,5 @@ interface IChatRepository : IBaseRepository {
      * returns an [LiveData] observable list of chats for [contact] if it's not null otherwise
      * a conversation(last message sent to each contact) list for the current user is returned
      */
-    suspend fun getConversations(contact: Contact?): ListenerRegistration?
+    suspend fun getConversations(contact: Contact?): List<Chat>
 }
