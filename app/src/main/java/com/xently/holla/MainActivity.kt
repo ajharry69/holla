@@ -9,6 +9,7 @@ import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
@@ -22,9 +23,13 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUserMetadata
 import com.xently.holla.Log.Type.ERROR
+import com.xently.holla.data.repository.Result
 import com.xently.holla.databinding.MainActivityBinding
+import com.xently.holla.utils.Type
 import com.xently.xui.SearchableActivity
 import com.xently.xui.utils.showSnackBar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : SearchableActivity() {
 
@@ -50,12 +55,9 @@ class MainActivity : SearchableActivity() {
         controller = navHostFragment.navController
         setupActionBarWithNavController(controller, configuration)
 
-        with(viewModel) {
-            setClient(FirebaseAuth.getInstance().currentUser)
-            observableContact.observe(this@MainActivity, Observer {
-                if (it == null) requestSignIn()
-            })
-        }
+        viewModel.observableContact.observe(this@MainActivity, Observer {
+            if (it == null) requestSignIn()
+        })
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -77,7 +79,12 @@ class MainActivity : SearchableActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.sign_out -> viewModel.signOut().isSuccessful
+            R.id.sign_out -> {
+                viewModel.viewModelScope.launch(Dispatchers.Main) {
+                    viewModel.signOut()
+                }
+                true
+            }
             else -> item.onNavDestinationSelected(controller) || super.onOptionsItemSelected(item)
         }
     }
@@ -101,11 +108,13 @@ class MainActivity : SearchableActivity() {
     private fun onSignInSuccess() {
         val currentUser = FirebaseAuth.getInstance().currentUser ?: return
         val metadata: FirebaseUserMetadata = currentUser.metadata ?: return
-        if (metadata.creationTimestamp == metadata.lastSignInTimestamp) {
-            // The user is new, show them a fancy intro screen!
-            viewModel.addClient(currentUser).addOnCompleteListener(this) {
-                if (!it.isSuccessful) showSnackBar(R.string.sign_in_failed)
-            }
+        viewModel.viewModelScope.launch(Dispatchers.Main) {
+            if (metadata.creationTimestamp == metadata.lastSignInTimestamp) {
+                // The user is new, show them a fancy intro screen!
+                viewModel.saveContact().also {
+                    if (it is Result.Error) showSnackBar(R.string.sign_in_failed)
+                }
+            } else viewModel.saveContact(Type.UPDATE)
         }
     }
 

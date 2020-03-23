@@ -5,6 +5,7 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.ListenerRegistration
 import com.xently.holla.data.model.Chat
 import com.xently.holla.data.model.Contact
+import com.xently.holla.data.repository.Result
 
 interface IChatRepository : IBaseRepository {
 
@@ -13,7 +14,7 @@ interface IChatRepository : IBaseRepository {
      * a conversation(last message sent to each contact) list for the current user is returned
      */
     suspend fun getObservableConversations(contact: Contact?): LiveData<List<Chat>>
-    suspend fun sendMessage(message: Chat): Task<Void>
+    suspend fun sendMessage(message: Chat): Result<Void>
     suspend fun deleteMessage(message: Chat): Task<Void>
 
     /**

@@ -1,7 +1,6 @@
 package com.xently.holla.data.repository
 
 import android.content.Context
-import android.provider.ContactsContract.CommonDataKinds.Phone
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
@@ -17,7 +16,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
-class ChatRepository internal constructor(private val context: Context) : BaseRepository(),
+class ChatRepository internal constructor(context: Context) : BaseRepository(context),
     IChatRepository {
 
     private val observableConversationList = MutableLiveData<List<Chat>>(null)
@@ -32,13 +31,11 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
         }
     }
 
-    override suspend fun sendMessage(message: Chat): Task<Void> {
+    override suspend fun sendMessage(message: Chat): Result<Void> {
         val messageId = messagesCollection.document().id
         return messagesCollection.document(messageId)
             .set(message.copy(id = messageId, senderId = firebaseAuth.currentUser?.uid.toString()))
-            .addOnCompleteListener {
-                if (it.exception != null) setException(it.exception)
-            }
+            .execute()
     }
 
     override suspend fun deleteMessage(message: Chat): Task<Void> {
@@ -77,30 +74,12 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
 
             return chatList
         } catch (ex: Exception) {
+            Log.show("FCMService", ex.message, ex, Log.Type.ERROR) // TODO
             setException(ex)
             observable.refreshList(emptyList())
             return emptyList()
         }
     }
-
-    private val Contact.local: Contact
-        get() {
-            var contact = this
-            context.contentResolver.query(
-                Phone.CONTENT_URI,
-                null,
-                "${Phone.NORMALIZED_NUMBER} LIKE ?",
-                arrayOf(contact.mobileNumber),
-                null
-            )?.use {
-                while (it.moveToNext()) {
-                    val name: String = it.getString(it.getColumnIndex(Phone.DISPLAY_NAME))
-                    contact = contact.copy(name = name)
-                }
-            }
-
-            return contact
-        }
 
     private suspend fun List<Chat>.getConversations(user: FirebaseUser): List<Chat> =
         withContext(Dispatchers.Default) {
@@ -121,28 +100,32 @@ class ChatRepository internal constructor(private val context: Context) : BaseRe
         for (chat in this) {
             when {
                 chat.senderId == userId -> {
-                    val sender = chat.sender.copy(
-                        id = userId,
-                        mobileNumber = user.phoneNumber
-                    ).local
+                    val sender = getLocalContact(
+                        chat.sender.copy(
+                            id = userId,
+                            mobileNumber = user.phoneNumber
+                        )
+                    )
                     val receiver =
                         usersCollection.whereEqualTo(Contact.CREATOR.Fields.ID, chat.receiverId)
                             .limit(1).get().await()
                     chatList += chat.copy(
                         sender = sender,
-                        receiver = receiver.getObject(chat.receiver).local
+                        receiver = getLocalContact(receiver.getObject(chat.receiver))
                     )
                 }
                 chat.receiverId == userId -> {
-                    val receiver = chat.receiver.copy(
-                        id = userId,
-                        mobileNumber = user.phoneNumber
-                    ).local
+                    val receiver = getLocalContact(
+                        chat.receiver.copy(
+                            id = userId,
+                            mobileNumber = user.phoneNumber
+                        )
+                    )
                     val sender =
                         usersCollection.whereEqualTo(Contact.CREATOR.Fields.ID, chat.senderId)
                             .limit(1).get().await()
                     chatList += chat.copy(
-                        sender = sender.getObject(chat.sender).local,
+                        sender = getLocalContact(sender.getObject(chat.sender)),
                         receiver = receiver
                     )
                 }

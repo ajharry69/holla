@@ -2,26 +2,33 @@ package com.xently.holla.data.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.xently.holla.utils.IData
+import com.xently.holla.utils.objectFromJson
 
 data class Contact(
     val id: String = "",
     val name: String? = null,
     val mobileNumber: String? = null,
     val profilePictureUrl: String? = null,
-    val status: String? = "Hey there! I am using Holla"
+    val status: String? = "Hey there! I am using Holla",
+    val fcmToken: String? = null
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString()!!,
+        parcel.readString(),
         parcel.readString(),
         parcel.readString(),
         parcel.readString()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(id)
-        parcel.writeString(name)
-        parcel.writeString(mobileNumber)
-        parcel.writeString(profilePictureUrl)
+        parcel.run {
+            writeString(id)
+            writeString(name)
+            writeString(mobileNumber)
+            writeString(profilePictureUrl)
+            writeString(fcmToken)
+        }
     }
 
     override fun describeContents(): Int = 0
@@ -32,6 +39,7 @@ data class Contact(
         result = 31 * result + (mobileNumber?.hashCode() ?: 0)
         result = 31 * result + (profilePictureUrl?.hashCode() ?: 0)
         result = 31 * result + (status?.hashCode() ?: 0)
+        result = 31 * result + (fcmToken?.hashCode() ?: 0)
         return result
     }
 
@@ -46,21 +54,26 @@ data class Contact(
         if (mobileNumber != other.mobileNumber) return false
         if (profilePictureUrl != other.profilePictureUrl) return false
         if (status != other.status) return false
+        if (fcmToken != other.fcmToken) return false
 
         return true
     }
 
-    companion object CREATOR : Parcelable.Creator<Contact> {
+    companion object CREATOR : Parcelable.Creator<Contact>, IData<Contact> {
         object Fields {
             const val ID = "id"
             const val NAME = "name"
             const val MOBILE = "mobileNumber"
             const val PICTURE = "profilePictureUrl"
             const val STATUS = "status"
+            const val FCM_TOKEN = "fcmToken"
         }
 
         override fun createFromParcel(parcel: Parcel): Contact = Contact(parcel)
 
         override fun newArray(size: Int): Array<Contact?> = arrayOfNulls(size)
+
+        @JvmStatic
+        override fun fromJson(json: String?): Contact? = objectFromJson(json)
     }
 }

@@ -12,8 +12,8 @@ import com.xently.holla.data.model.Contact
 import com.xently.holla.data.model.Contact.CREATOR.Fields.MOBILE
 import com.xently.holla.data.repository.schema.IContactRepository
 
-class ContactRepository internal constructor(private val context: Context) : BaseRepository(),
-    IContactRepository {
+class ContactRepository internal constructor(private val context: Context) :
+    BaseRepository(context), IContactRepository {
 
     private val observableContactList: MutableLiveData<List<Contact>> = MutableLiveData(emptyList())
 

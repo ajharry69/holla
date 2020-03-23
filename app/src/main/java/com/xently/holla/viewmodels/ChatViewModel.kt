@@ -8,6 +8,7 @@ import com.xently.holla.data.repository.schema.IChatRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 abstract class ChatViewModel(private val repository: IChatRepository) : BaseViewModel(repository) {
 
@@ -15,7 +16,7 @@ abstract class ChatViewModel(private val repository: IChatRepository) : BaseView
         emitSource(repository.getObservableConversations(contact))
     }
 
-    fun sendMessage(message: Chat) = runBlocking(viewModelScope.coroutineContext) {
+    suspend fun sendMessage(message: Chat) = withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
         repository.sendMessage(message)
     }
 

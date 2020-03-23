@@ -6,17 +6,22 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.xently.holla.App
+import com.xently.holla.R
 import com.xently.holla.data.model.Chat
 import com.xently.holla.data.model.Contact
+import com.xently.holla.data.repository.Result
 import com.xently.holla.databinding.MessageFragmentBinding
 import com.xently.holla.ui.list.message.MessageListFragment
 import com.xently.xui.Fragment
 import com.xently.xui.adapters.viewpager.FragmentPagerAdapter
 import com.xently.xui.adapters.viewpager.TitledFragment
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MessageFragment : Fragment(), FirebaseAuth.AuthStateListener {
 
@@ -53,15 +58,31 @@ class MessageFragment : Fragment(), FirebaseAuth.AuthStateListener {
                 childFragmentManager
             )
         }
+        binding.messageContainer.removeErrorOnTextChange()
         binding.messageContainer.setEndIconOnClickListener {
+            val message: String? = binding.message.text.toString()
+            if (message.isNullOrBlank()) {
+                binding.messageContainer.setErrorTextAndFocus(R.string.message_required)
+                return@setEndIconOnClickListener
+            }
+
+            if (message.length > resources.getInteger(R.integer.max_message_size)) {
+                binding.messageContainer.setErrorTextAndFocus(R.string.message_too_long)
+                return@setEndIconOnClickListener
+            }
             hideKeyboard()
-            viewModel.sendMessage(
-                Chat(
-                    body = binding.message.text.toString(),
-                    receiverId = contact.id
-                )
-            ).addOnCompleteListener {
-                if (it.isSuccessful) clearText(binding.message)
+            viewModel.viewModelScope.launch(Dispatchers.Main) {
+                viewModel.sendMessage(
+                    Chat(
+                        body = message,
+                        receiverId = contact.id
+                    )
+                ).also {
+                    if (it is Result.Success<*>) {
+                        clearText(binding.message)
+                        viewModel.getConversations(contact)
+                    }
+                }
             }
         }
         binding.messageContainer.setStartIconOnClickListener {
@@ -83,6 +104,3 @@ class MessageFragment : Fragment(), FirebaseAuth.AuthStateListener {
 
     }
 }
-
-
-
