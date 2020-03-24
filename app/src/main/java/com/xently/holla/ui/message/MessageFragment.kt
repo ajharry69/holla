@@ -49,10 +49,16 @@ class MessageFragment : Fragment(), FirebaseAuth.AuthStateListener {
         return binding.root
     }
 
+    override fun onDestroyView() {
+        binding.viewPager.removeAllViews()
+        _binding = null
+        super.onDestroyView()
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        with(binding.listView) {
+        with(binding.viewPager) {
             adapter = FragmentPagerAdapter(
                 listOf(TitledFragment(MessageListFragment.newInstance(contact), null)),
                 childFragmentManager

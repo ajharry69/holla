@@ -11,7 +11,7 @@
         tools:context=".ui.list.message.MessageListFragment">
 
         <androidx.viewpager.widget.ViewPager
-            android:id="@+id/list_view"
+            android:id="@+id/view_pager"
             android:layout_width="0dp"
             android:layout_height="0dp"
             app:layout_constraintBottom_toTopOf="@id/data_entry_container"
@@ -27,7 +27,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/list_view">
+            app:layout_constraintTop_toBottomOf="@id/view_pager">
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/message_container"

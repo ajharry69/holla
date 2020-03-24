@@ -50,19 +50,23 @@ class ChatRepository internal constructor(context: Context) : BaseRepository(con
             val currentUser =
                 firebaseAuth.currentUser ?: throw Exception("Authentication is required")
             val currentUserId = currentUser.uid
-            val chatListAsSender = if (contact == null) {
-                messagesCollection.whereEqualTo(Fields.SENDER, currentUserId)
-            } else {
-                messagesCollection.whereEqualTo(Fields.SENDER, contact.id)
-                    .whereEqualTo(Fields.RECEIVER, currentUserId)
-            }.get().await().toObjects(Chat::class.java)
+            val chatListAsSender = withContext(Dispatchers.IO) {
+                if (contact == null) {
+                    messagesCollection.whereEqualTo(Fields.SENDER, currentUserId)
+                } else {
+                    messagesCollection.whereEqualTo(Fields.SENDER, contact.id)
+                        .whereEqualTo(Fields.RECEIVER, currentUserId)
+                }.get().await().toObjects(Chat::class.java)
+            }
 
-            val chatListAsReceiver = if (contact == null) {
-                messagesCollection.whereEqualTo(Fields.RECEIVER, currentUserId)
-            } else {
-                messagesCollection.whereEqualTo(Fields.RECEIVER, contact.id)
-                    .whereEqualTo(Fields.SENDER, currentUserId)
-            }.get().await().toObjects(Chat::class.java)
+            val chatListAsReceiver = withContext(Dispatchers.IO) {
+                if (contact == null) {
+                    messagesCollection.whereEqualTo(Fields.RECEIVER, currentUserId)
+                } else {
+                    messagesCollection.whereEqualTo(Fields.RECEIVER, contact.id)
+                        .whereEqualTo(Fields.SENDER, currentUserId)
+                }.get().await().toObjects(Chat::class.java)
+            }
 
             val chatList = if (contact == null) {
                 (chatListAsReceiver + chatListAsSender).getConversations(currentUser)
@@ -74,7 +78,6 @@ class ChatRepository internal constructor(context: Context) : BaseRepository(con
 
             return chatList
         } catch (ex: Exception) {
-            Log.show("FCMService", ex.message, ex, Log.Type.ERROR) // TODO
             setException(ex)
             observable.refreshList(emptyList())
             return emptyList()
@@ -83,14 +86,63 @@ class ChatRepository internal constructor(context: Context) : BaseRepository(con
 
     private suspend fun List<Chat>.getConversations(user: FirebaseUser): List<Chat> =
         withContext(Dispatchers.Default) {
-            val conversations = arrayListOf<Chat>()
-            // Group chats by recipients(contact) id then scan through each of them to get the latest
-            val g1 = groupBy { it.senderId }
-            for (group in g1) {
-                // Add the latest message to the conversation list
-                conversations.add(group.value.sortedByDescending { it.timeSent }[0])
+            // Chats sent by(not sent to) current user
+            val curUserChats = arrayListOf<Chat>()
+            // Chats not sent by(sent to) current user
+            val noneCurUserChats = arrayListOf<Chat>()
+
+            for (chat in this@getConversations) {
+                if (chat.receiverId == user.uid) {
+                    // Get chats sent to current user
+                    noneCurUserChats += chat
+                } else {
+                    // Get chats sent by current user
+                    // Assumption is made that no unauthorized chat(s) escaped firestore query
+                    curUserChats += chat
+                }
             }
-            conversations.sortedByDescending { it.timeSent }
+
+            // Group by chat receiver(s)
+            val curUserChatsGroup = // curUserChats.groupBy { it.receiverId }
+                withContext(Dispatchers.Default) { curUserChats.groupBy { it.receiverId } }
+            // Group by chat sender(s)
+            val noneCurUserChatsGroup = // noneCurUserChats.groupBy { it.senderId }
+                withContext(Dispatchers.Default) { noneCurUserChats.groupBy { it.senderId } }
+
+            // Clear list(s) for re-use
+            curUserChats.clear()
+            noneCurUserChats.clear()
+
+            assert((curUserChats.size + noneCurUserChats.size) == 0)
+
+            for (g in curUserChatsGroup) {
+                // For every receiver, get the latest chat sent by current user
+//                curUserChats += g.value.sortedByDescending { it.timeSent }[0]
+                curUserChats += withContext(Dispatchers.Default) { g.value.sortedByDescending { it.timeSent } }[0]
+            }
+
+            for (g in noneCurUserChatsGroup) {
+                // For every sender, get the latest chat sent to current user
+//                noneCurUserChats += g.value.sortedByDescending { it.timeSent }[0]
+                noneCurUserChats += withContext(Dispatchers.Default) { g.value.sortedByDescending { it.timeSent } }[0]
+            }
+
+            val convList = arrayListOf<Chat>()
+            for (c1 in curUserChats) {
+                // From the filtered list, get the latest chat in a conversation between current
+                // user and a receiver
+                loop@ for ((i, c2) in noneCurUserChats.withIndex()) {
+                    Log.show("FCMService", "Comp: ${c1.receiverId} to ${c2.senderId}")
+                    if (c1.receiverId == c2.senderId) {
+                        // Add latest chat between current user's and his/her friend's
+                        convList += (if (c1.timeSent > c2.timeSent) c1 else c2)
+                    } else if (i + 1 == noneCurUserChats.size) {
+                        convList += c1
+                    }
+                }
+            }
+
+            convList.sortedByDescending { it.timeSent }
         }
 
     private suspend fun List<Chat>.withContacts(user: FirebaseUser): ArrayList<Chat> {

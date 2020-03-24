@@ -69,9 +69,7 @@ class MainActivity : SearchableActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        return if (menu == null) {
-            super.onCreateOptionsMenu(menu)
-        } else {
+        return if (menu == null) super.onCreateOptionsMenu(menu) else {
             menuInflater.inflate(R.menu.main, menu)
             true
         }

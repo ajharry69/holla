@@ -42,6 +42,8 @@ class FCMService : FirebaseMessagingService() {
         val notification = p0.notification
         val (title, body) = Pair(notification?.title, notification?.body)
 
+        Log.show(LOG_TAG, "FCM Message received!\nTitle: $title\nBody: $body\nData: ${p0.data}") // TODO
+
         vm.run {
             viewModelScope.launch(Dispatchers.Main) {
 

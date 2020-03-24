@@ -1,9 +1,5 @@
 package com.xently.holla.utils
 
-import com.xently.holla.utils.PasswordOperationType.CHANGE
-import com.xently.holla.utils.PasswordOperationType.RESET
-import com.xently.holla.utils.VerificationCodeRequest.RESEND
-import com.xently.holla.utils.VerificationCodeRequest.VERIFY
 import java.util.*
 
 /*
@@ -44,38 +40,6 @@ enum class DurationUnit(val equiv: String) {
             return null
         }
     }
-}
-
-/**
- * 1). [RESET]: Flag to [RESET] a forgotten password
- * 2). [CHANGE]: Flag to [CHANGE] a password that's not forgotten
- */
-enum class PasswordOperationType {
-    /**
-     * Flag to [RESET] a forgotten password
-     */
-    RESET,
-
-    /**
-     * Flag to [CHANGE] a password that's not forgotten
-     */
-    CHANGE
-}
-
-/**
- * 1). [RESEND]: Flag to [RESEND] verification code
- * 2). [VERIFY]: Flag to [VERIFY] verification code
- */
-enum class VerificationCodeRequest {
-    /**
-     * Flag to [RESEND] verification code
-     */
-    RESEND,
-
-    /**
-     * Flag to [VERIFY] verification code
-     */
-    VERIFY
 }
 
 enum class Type { CREATE, UPDATE }
