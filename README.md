@@ -18,6 +18,8 @@ Checked features are ones already implemented
 
 ## Screenshots
 
+| Screenshot | Screenshot |
+| --- | --- |
 | ![register-phone][register-phone] | ![verify-phone][verify-phone] |
 | ![conversation][conversation] | ![chat][chat] |
 
