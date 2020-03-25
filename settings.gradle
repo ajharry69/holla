@@ -1,2 +1,2 @@
 rootProject.name='Holla'
-include ':app', ':dialog', ':core'
+include ':app'

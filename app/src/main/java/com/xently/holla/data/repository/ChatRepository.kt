@@ -84,7 +84,7 @@ class ChatRepository internal constructor(context: Context) : BaseRepository(con
         }
     }
 
-    private suspend fun List<Chat>.getConversations(user: FirebaseUser): List<Chat> =
+    private suspend fun List<Chat>.getConversations(user: FirebaseUser) =
         withContext(Dispatchers.Default) {
             // Chats sent by(not sent to) current user
             val curUserChats = arrayListOf<Chat>()

@@ -88,11 +88,11 @@ dependencies {
     kapt "com.github.bumptech.glide:compiler:$glide_version"
     implementation 'de.hdodenhof:circleimageview:3.1.0'
     implementation 'joda-time:joda-time:2.10.3'
-    /*implementation "com.xently.xui:dialog:$xently_ui_version"
-    implementation "com.xently.xui:core:${xently_ui_version}"*/
-    /* TODO: Replace the 2 below with the latest version(s) 2 above */
-    implementation project(path: ':core')
-    implementation project(path: ':dialog')
+    implementation "com.xently.xui:dialog:$xently_ui_version"
+    implementation "com.xently.xui:core:${xently_ui_version}"
+    // TODO: Replace the 2 below with the latest version(s) 2 above
+    /*implementation project(path: ':core')
+    implementation project(path: ':dialog')*/
 
     // Tests
     androidTestImplementation "androidx.navigation:navigation-testing:$nav_version"
