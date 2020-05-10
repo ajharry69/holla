@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.xently.holla.App
 import com.xently.holla.R
 import com.xently.holla.adapters.list.MessageListAdapter
-import com.xently.holla.data.model.Chat
+import com.xently.holla.data.model.Message
 import com.xently.holla.data.model.Contact
 import com.xently.holla.ui.list.ChatListFragment
 import com.xently.holla.viewmodels.ChatViewModel
@@ -36,7 +36,7 @@ class MessageListFragment : ChatListFragment() {
         }
     }
 
-    override fun onListItemClick(model: Chat, view: View) = Unit
+    override fun onListItemClick(model: Message, view: View) = Unit
 
     override fun onCreateRecyclerView(recyclerView: RecyclerView): RecyclerView {
         return super.onCreateRecyclerView(recyclerView).apply {

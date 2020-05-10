@@ -11,12 +11,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.SnapshotMetadata
 import com.google.firebase.storage.FirebaseStorage
 import com.xently.holla.FBCollection.MESSAGES
 import com.xently.holla.FBCollection.USERS
 import com.xently.holla.Log
+import com.xently.holla.data.Result
 import com.xently.holla.data.model.Contact
 import com.xently.holla.data.repository.schema.IBaseRepository
 import kotlinx.coroutines.CancellationException
@@ -78,21 +78,4 @@ abstract class BaseRepository internal constructor(private val context: Context)
     }
 
     enum class Source { REMOTE, LOCAL }
-}
-
-inline fun <reified T> QuerySnapshot.getObject(default: T): T {
-    for (snapshot in this) {
-        if (snapshot.exists()) return snapshot.toObject(T::class.java)
-    }
-
-    return default
-}
-
-inline fun <reified T> QuerySnapshot.getObjects(): List<T> {
-    return toObjects(T::class.java)
-}
-
-sealed class Result<out T> {
-    data class Success<T>(val data: T) : Result<T>()
-    data class Error(val error: Exception) : Result<Nothing>()
 }

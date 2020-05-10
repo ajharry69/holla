@@ -12,11 +12,11 @@ import androidx.core.graphics.BlendModeCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.xently.holla.R
 import com.xently.holla.adapters.list.MessageListAdapter.MessageViewHolder
-import com.xently.holla.data.model.Chat
+import com.xently.holla.data.model.Message
 import com.xently.holla.databinding.MessageItemBinding
 import com.xently.xui.adapters.list.ListAdapter
 
-class MessageListAdapter : ListAdapter<Chat, MessageViewHolder>(ChatDiffUtil()) {
+class MessageListAdapter : ListAdapter<Message, MessageViewHolder>(ChatDiffUtil()) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
         return MessageViewHolder(
             MessageItemBinding.inflate(
@@ -35,7 +35,7 @@ class MessageListAdapter : ListAdapter<Chat, MessageViewHolder>(ChatDiffUtil()) 
     inner class MessageViewHolder(val binding: MessageItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(chat: Chat) {
+        fun bind(chat: Message) {
             setIsSender(chat.isSender)
             binding.chat = chat
         }

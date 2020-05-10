@@ -42,7 +42,10 @@ class FCMService : FirebaseMessagingService() {
         val notification = p0.notification
         val (title, body) = Pair(notification?.title, notification?.body)
 
-        Log.show(LOG_TAG, "FCM Message received!\nTitle: $title\nBody: $body\nData: ${p0.data}") // TODO
+        Log.show(
+            LOG_TAG,
+            "FCM Chat received!\nTitle: $title\nBody: $body\nData: ${p0.data}"
+        ) // TODO
 
         vm.run {
             viewModelScope.launch(Dispatchers.Main) {
@@ -63,10 +66,10 @@ class FCMService : FirebaseMessagingService() {
         }
     }
 
-    override fun onMessageSent(p0: String) = Log.show(LOG_TAG, "FCM Message Sent: $p0")
+    override fun onMessageSent(p0: String) = Log.show(LOG_TAG, "FCM Chat Sent: $p0")
 
     override fun onSendError(p0: String, p1: Exception) =
-        Log.show(LOG_TAG, "FCM Message Send Error: $p0", p1, Log.Type.ERROR)
+        Log.show(LOG_TAG, "FCM Chat Send Error: $p0", p1, Log.Type.ERROR)
 
     override fun onNewToken(p0: String) {
         Log.show(LOG_TAG, "New token $p0")

@@ -45,12 +45,12 @@
         android:id="@+id/dest_message_list"
         android:name="com.xently.holla.ui.list.message.MessageListFragment"
         android:label="@string/toolbar_title_message_list"
-        tools:layout="@layout/list_fragment" >
+        tools:layout="@layout/list_fragment">
         <argument
             android:name="argsContact"
+            android:defaultValue="@null"
             app:argType="com.xently.holla.data.model.Contact"
-            app:nullable="true"
-            android:defaultValue="@null" />
+            app:nullable="true" />
     </fragment>
     <fragment
         android:id="@+id/dest_profile"

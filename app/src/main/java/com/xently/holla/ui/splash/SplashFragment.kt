@@ -21,7 +21,7 @@ import com.xently.holla.App
 import com.xently.holla.BuildConfig
 import com.xently.holla.Log
 import com.xently.holla.R
-import com.xently.holla.data.repository.Result
+import com.xently.holla.data.Result
 import com.xently.holla.databinding.SplashFragmentBinding
 import com.xently.holla.utils.Type
 import com.xently.xui.Fragment

@@ -6,20 +6,20 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Exclude
 
-data class Chat(
-    val id: String = "",
-    val body: String? = null,
-    val receiverId: String = "",
-    val senderId: String = "", // Will be picked from the currently signed in user's ID
-    val type: Type = Type.Text,
-    val mediaUrl: String? = null,
-    val sent: Boolean = true,
-    val read: Boolean = false,
-    val deleteFromSender: Boolean = false,
-    val deleteFromReceiver: Boolean = false,
-    val timeSent: Timestamp = Timestamp.now(),
-    @get:Exclude val sender: Contact = Contact(id = senderId),
-    @get:Exclude val receiver: Contact = Contact(id = receiverId)
+abstract class Chat(
+    open val id: String = "",
+    open val body: String? = null,
+    open val receiverId: String = "",
+    open val senderId: String = "", // Will be picked from the currently signed in user's ID
+    open val type: Type = Type.Text,
+    open val mediaUrl: String? = null,
+    open val sent: Boolean = true,
+    open val read: Boolean = false,
+    open val deleteFromSender: Boolean = false,
+    open val deleteFromReceiver: Boolean = false,
+    open val timeSent: Timestamp = Timestamp.now(),
+    open val sender: Contact = Contact(id = senderId),
+    open val receiver: Contact = Contact(id = receiverId)
 ) : Parcelable {
     @get:Exclude
     val isSender: Boolean
@@ -71,7 +71,6 @@ data class Chat(
             writeString(body)
             writeString(receiverId)
             writeString(senderId)
-            writeString(type.name)
             writeString(mediaUrl)
             writeByte(if (sent) 1 else 0)
             writeByte(if (read) 1 else 0)
@@ -106,7 +105,7 @@ data class Chat(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Chat
+        other as Conversation
 
         if (id != other.id) return false
         if (body != other.body) return false
@@ -124,25 +123,20 @@ data class Chat(
 
         return true
     }
+}
 
-    companion object CREATOR : Parcelable.Creator<Chat> {
-        object Fields {
-            const val ID = "id"
-            const val BODY = "body"
-            const val RECEIVER = "receiverId"
-            const val SENDER = "senderId"
-            const val TYPE = "type"
-            const val MEDIA_URL = "mediaUrl"
-            const val SENT = "sent"
-            const val READ = "read"
-            const val DELETE_FROM_SENDER = "deleteFromSender"
-            const val DELETE_FROM_RECEIVER = "deleteFromReceiver"
-            const val TIME_SENT = "timeSent"
-        }
-
-        override fun createFromParcel(parcel: Parcel): Chat =
-            Chat(parcel)
-
-        override fun newArray(size: Int): Array<Chat?> = arrayOfNulls(size)
+interface ChatCreator<T : Chat> : Parcelable.Creator<T> {
+    object Fields {
+        const val ID = "id"
+        const val BODY = "body"
+        const val RECEIVER = "receiverId"
+        const val SENDER = "senderId"
+        const val TYPE = "type"
+        const val MEDIA_URL = "mediaUrl"
+        const val SENT = "sent"
+        const val READ = "read"
+        const val DELETE_FROM_SENDER = "deleteFromSender"
+        const val DELETE_FROM_RECEIVER = "deleteFromReceiver"
+        const val TIME_SENT = "timeSent"
     }
 }

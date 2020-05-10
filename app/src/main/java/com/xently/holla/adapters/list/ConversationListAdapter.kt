@@ -4,11 +4,11 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.xently.holla.adapters.list.ConversationListAdapter.ChatViewHolder
-import com.xently.holla.data.model.Chat
+import com.xently.holla.data.model.Message
 import com.xently.holla.databinding.ConversationItemBinding
 import com.xently.xui.adapters.list.ListAdapter
 
-class ConversationListAdapter : ListAdapter<Chat, ChatViewHolder>(ChatDiffUtil()) {
+class ConversationListAdapter : ListAdapter<Message, ChatViewHolder>(ChatDiffUtil()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
         return ChatViewHolder(
@@ -28,7 +28,7 @@ class ConversationListAdapter : ListAdapter<Chat, ChatViewHolder>(ChatDiffUtil()
     inner class ChatViewHolder internal constructor(private val binding: ConversationItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(chat: Chat) {
+        fun bind(chat: Message) {
             binding.conversation = chat
         }
     }

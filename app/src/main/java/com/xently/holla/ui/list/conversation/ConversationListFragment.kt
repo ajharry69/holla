@@ -8,7 +8,7 @@ import androidx.navigation.findNavController
 import com.xently.holla.App
 import com.xently.holla.R
 import com.xently.holla.adapters.list.ConversationListAdapter
-import com.xently.holla.data.model.Chat
+import com.xently.holla.data.model.Message
 import com.xently.holla.ui.list.ChatListFragment
 import com.xently.holla.ui.list.conversation.ConversationListFragmentDirections.Companion.actionContactList
 import com.xently.holla.ui.list.conversation.ConversationListFragmentDirections.Companion.actionMessage
@@ -20,7 +20,7 @@ class ConversationListFragment : ChatListFragment() {
         ChatListViewModelFactory((requireContext().applicationContext as App).chatRepository)
     }
 
-    override val listAdapter: ListAdapter<Chat, *> by lazy {
+    override val listAdapter: ListAdapter<Message, *> by lazy {
         ConversationListAdapter().apply {
             listItemClickListener = this@ConversationListFragment
         }
@@ -34,7 +34,7 @@ class ConversationListFragment : ChatListFragment() {
         return Navigation.createNavigateOnClickListener(actionContactList())
     }
 
-    override fun onListItemClick(model: Chat, view: View) {
+    override fun onListItemClick(model: Message, view: View) {
         view.findNavController().navigate(actionMessage(model.conversationContact))
     }
 }

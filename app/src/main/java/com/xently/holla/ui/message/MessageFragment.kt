@@ -12,14 +12,11 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.xently.holla.App
 import com.xently.holla.R
-import com.xently.holla.data.model.Chat
+import com.xently.holla.data.Result
+import com.xently.holla.data.model.Message
 import com.xently.holla.data.model.Contact
-import com.xently.holla.data.repository.Result
 import com.xently.holla.databinding.MessageFragmentBinding
-import com.xently.holla.ui.list.message.MessageListFragment
 import com.xently.xui.Fragment
-import com.xently.xui.adapters.viewpager.FragmentPagerAdapter
-import com.xently.xui.adapters.viewpager.TitledFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -79,7 +76,7 @@ class MessageFragment : Fragment(), FirebaseAuth.AuthStateListener {
             hideKeyboard()
             viewModel.viewModelScope.launch(Dispatchers.Main) {
                 viewModel.sendMessage(
-                    Chat(
+                    Message(
                         body = message,
                         receiverId = contact.id
                     )

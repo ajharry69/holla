@@ -4,11 +4,11 @@
 
     <data>
 
-        <import type="com.xently.holla.data.model.Chat" />
+        <import type="com.xently.holla.data.model.Message" />
 
         <variable
             name="chat"
-            type="Chat" />
+            type="Message" />
     </data>
 
     <RelativeLayout

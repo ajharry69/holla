@@ -2,11 +2,15 @@ package com.xently.holla.data.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.xently.holla.utils.IData
+import com.xently.holla.utils.JSON_CONVERTER
 import com.xently.holla.utils.objectFromJson
 
+@Entity
 data class Contact(
-    val id: String = "",
+    @PrimaryKey(autoGenerate = false) val id: String = "",
     val name: String? = null,
     val mobileNumber: String? = null,
     val profilePictureUrl: String? = null,
@@ -58,6 +62,8 @@ data class Contact(
 
         return true
     }
+
+    override fun toString(): String = JSON_CONVERTER.toJson(this)
 
     companion object CREATOR : Parcelable.Creator<Contact>, IData<Contact> {
         object Fields {
