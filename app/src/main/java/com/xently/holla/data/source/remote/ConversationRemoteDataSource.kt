@@ -2,12 +2,8 @@ package com.xently.holla.data.source.remote
 
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
-import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.CollectionReference
-import com.xently.holla.data.Result
-import com.xently.holla.data.Source
-import com.xently.holla.data.getObject
-import com.xently.holla.data.getObjects
+import com.xently.holla.data.*
 import com.xently.holla.data.model.Conversation
 import com.xently.holla.data.source.schema.IConversationDataSource
 import kotlinx.coroutines.Dispatchers
@@ -26,7 +22,10 @@ class ConversationRemoteDataSource internal constructor(context: Context) :
     override suspend fun getObservableConversations() = observableConversationList
 
     // Implementation is unnecessary. It's taken care of by firebase-functions
-    override suspend fun saveConversation(conversation: Conversation): Result<Unit> {
+    override suspend fun saveConversation(
+        conversation: Conversation,
+        destination: Source?
+    ): Result<Conversation> {
         val conversationId = conversationsCollection.document().id
         val msg = conversation.copy(
             id = conversationId,
@@ -34,20 +33,26 @@ class ConversationRemoteDataSource internal constructor(context: Context) :
         )
         val result = conversationsCollection.document(conversationId).set(msg).execute()
         return if (result is Result.Success) {
-            Result.Success(Unit)
+            getConversation(conversation.mateId)?.let {
+                Result.Success(it)
+            } ?: Result.Error(Exception("Error retrieving conversation"))
         } else result as Result.Error
     }
 
     // Implementation is unnecessary. It's taken care of by firebase-functions
-    override suspend fun saveConversations(conversations: List<Conversation>): Result<Unit> {
-        withContext(Dispatchers.IO) {
-            conversations.forEach {
-                launch {
-                    saveConversation(it)
+    override suspend fun saveConversations(
+        conversations: List<Conversation>,
+        destination: Source?
+    ) = withContext(Dispatchers.IO) {
+        val conv = arrayListOf<Conversation>()
+        conversations.forEach {
+            launch {
+                saveConversation(it).data?.also {
+                    conv += it
                 }
             }
         }
-        return Result.Success(Unit)
+        Result.Success(conv)
     }
 
     override suspend fun deleteConversation(id: String, source: Source?): Result<Unit> {
@@ -61,25 +66,21 @@ class ConversationRemoteDataSource internal constructor(context: Context) :
     override suspend fun deleteConversation(
         conversation: Conversation,
         source: Source?
-    ): Task<Void>? {
-        return conversationsCollection.document(conversation.id).delete().addOnCompleteListener {
-            if (it.isSuccessful) runBlocking {
-                launch(Dispatchers.IO) {
-                    observableConversationList.deleteConversationIfPresent(conversation)
-                }
+    ) = conversationsCollection.document(conversation.id).delete().addOnCompleteListener {
+        if (it.isSuccessful) runBlocking {
+            launch(Dispatchers.IO) {
+                observableConversationList.deleteConversationIfPresent(conversation)
             }
         }
     }
 
-    override suspend fun getConversation(mateId: String): Conversation? {
-        return conversationsCollection.document(mateId).get().await().getObject()
-    }
+    override suspend fun getConversation(mateId: String) =
+        conversationsCollection.document(mateId).get().await().getObject<Conversation>()
 
-    override suspend fun getConversations(): List<Conversation> {
-        val conversations = conversationsCollection.get().await().getObjects<Conversation>()
-        observableConversationList.refreshList(conversations)
-        return conversations
-    }
+    override suspend fun getConversations() =
+        conversationsCollection.get().await().getObjects<Conversation>().apply {
+            observableConversationList.refreshList(this)
+        }
 
     private suspend fun MutableLiveData<List<Conversation>>.deleteConversationIfPresent(conversation: Conversation) {
         withContext(Dispatchers.Default) {

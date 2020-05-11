@@ -8,8 +8,15 @@ import com.xently.holla.data.model.Conversation
 
 interface IConversationDataSource : IBaseDataSource {
     suspend fun getObservableConversations(): LiveData<List<Conversation>>
-    suspend fun saveConversation(conversation: Conversation): Result<Unit>
-    suspend fun saveConversations(conversations: List<Conversation>): Result<Unit>
+    suspend fun saveConversation(
+        conversation: Conversation,
+        destination: Source? = null
+    ): Result<Conversation>
+
+    suspend fun saveConversations(
+        conversations: List<Conversation>,
+        destination: Source? = null
+    ): Result<List<Conversation>>
 
     /**
      * @param source specifies from where [id] is to be deleted. `null` means delete from

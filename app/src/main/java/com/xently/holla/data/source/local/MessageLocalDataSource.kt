@@ -38,7 +38,8 @@ class MessageLocalDataSource internal constructor(
                 deleteFromSender = message.deleteFromSender,
                 deleteFromReceiver = message.deleteFromReceiver,
                 timeSent = message.timeSent
-            )
+            ),
+
         )
         return Result.Success(message)
     }

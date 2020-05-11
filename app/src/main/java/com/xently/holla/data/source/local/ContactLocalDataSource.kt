@@ -15,11 +15,7 @@ class ContactLocalDataSource internal constructor(private val dao: ContactDao, c
 
     override suspend fun getObservableContact(id: String) = dao.getObservableContact(id)
 
-    override suspend fun saveContact(contact: Contact) {
-        dao.saveContact(contact)
-    }
+    override suspend fun saveContact(contact: Contact) = dao.saveContact(contact)
 
-    override suspend fun saveContacts(contacts: List<Contact>) {
-        dao.saveContacts(contacts)
-    }
+    override suspend fun saveContacts(contacts: List<Contact>) = dao.saveContacts(contacts)
 }

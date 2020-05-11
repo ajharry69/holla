@@ -14,14 +14,20 @@ class ConversationLocalDataSource internal constructor(
 ) : BaseLocalDataSource(context), IConversationDataSource {
     override suspend fun getObservableConversations() = dao.getObservableConversations()
 
-    override suspend fun saveConversation(conversation: Conversation): Result<Unit> {
+    override suspend fun saveConversation(
+        conversation: Conversation,
+        destination: Source?
+    ): Result<Conversation> {
         dao.saveConversation(conversation)
-        return Result.Success(Unit)
+        return Result.Success(dao.getConversation(conversation.mateId))
     }
 
-    override suspend fun saveConversations(conversations: List<Conversation>): Result<Unit> {
+    override suspend fun saveConversations(
+        conversations: List<Conversation>,
+        destination: Source?
+    ): Result<List<Conversation>> {
         dao.saveConversations(conversations)
-        return Result.Success(Unit)
+        return Result.Success(dao.getConversations())
     }
 
     override suspend fun deleteConversation(id: String, source: Source?): Result<Unit> {
