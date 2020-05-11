@@ -19,13 +19,13 @@ interface ContactDao {
     @Query("SELECT * FROM contact WHERE id = :id")
     suspend fun getContact(id: String): Contact
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun saveContact(contact: Contact): Int
+    @Insert(onConflict = OnConflictStrategy.REPLACE, entity = Contact::class)
+    suspend fun saveContact(contact: Contact)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun saveContacts(contacts: List<Contact>): Int
+    @Insert(onConflict = OnConflictStrategy.REPLACE, entity = Contact::class)
+    suspend fun saveContacts(contacts: List<Contact>)
 
-    @Delete
+    @Delete(entity = Contact::class)
     suspend fun deleteContact(contact: Contact): Int
 
     @Query("DELETE from contact")

@@ -6,6 +6,38 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Exclude
 
+/*sealed class Type {
+    object Text : Type()
+    sealed class Media : Type() {
+        object Photo : Media()
+        object Video : Media()
+        object Document : Media()
+    }
+}*/
+
+enum class Type {
+    Text,
+    Photo,
+    Video,
+    Document
+}
+
+interface ChatCreator<T> : Parcelable.Creator<T> {
+    object Fields {
+        const val ID = "id"
+        const val BODY = "body"
+        const val RECEIVER = "receiverId"
+        const val SENDER = "senderId"
+        const val TYPE = "type"
+        const val MEDIA_URL = "mediaUrl"
+        const val SENT = "sent"
+        const val READ = "read"
+        const val DELETE_FROM_SENDER = "deleteFromSender"
+        const val DELETE_FROM_RECEIVER = "deleteFromReceiver"
+        const val TIME_SENT = "timeSent"
+    }
+}
+
 abstract class Chat(
     open val id: String = "",
     open val body: String? = null,
@@ -21,6 +53,7 @@ abstract class Chat(
     open val sender: Contact = Contact(id = senderId),
     open val receiver: Contact = Contact(id = receiverId)
 ) : Parcelable {
+
     @get:Exclude
     val isSender: Boolean
         get() = FirebaseAuth.getInstance().currentUser?.uid == senderId
@@ -48,22 +81,6 @@ abstract class Chat(
         parcel.readParcelable(Contact::class.java.classLoader)!!,
         parcel.readParcelable(Contact::class.java.classLoader)!!
     )
-
-    /*sealed class Type {
-        object Text : Type()
-        sealed class Media : Type() {
-            object Photo : Media()
-            object Video : Media()
-            object Document : Media()
-        }
-    }*/
-
-    enum class Type {
-        Text,
-        Photo,
-        Video,
-        Document
-    }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.run {
@@ -105,7 +122,7 @@ abstract class Chat(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Conversation
+        other as Chat
 
         if (id != other.id) return false
         if (body != other.body) return false
@@ -122,21 +139,5 @@ abstract class Chat(
         if (receiver != other.receiver) return false
 
         return true
-    }
-}
-
-interface ChatCreator<T : Chat> : Parcelable.Creator<T> {
-    object Fields {
-        const val ID = "id"
-        const val BODY = "body"
-        const val RECEIVER = "receiverId"
-        const val SENDER = "senderId"
-        const val TYPE = "type"
-        const val MEDIA_URL = "mediaUrl"
-        const val SENT = "sent"
-        const val READ = "read"
-        const val DELETE_FROM_SENDER = "deleteFromSender"
-        const val DELETE_FROM_RECEIVER = "deleteFromReceiver"
-        const val TIME_SENT = "timeSent"
     }
 }

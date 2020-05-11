@@ -15,6 +15,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.onNavDestinationSelected
+import androidx.navigation.ui.setupActionBarWithNavController
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
@@ -26,7 +27,7 @@ import com.xently.holla.data.Result
 import com.xently.holla.databinding.MainActivityBinding
 import com.xently.holla.utils.Type
 import com.xently.xui.SearchableActivity
-import com.xently.xui.utils.showSnackBar
+import com.xently.xui.utils.ui.showSnackBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

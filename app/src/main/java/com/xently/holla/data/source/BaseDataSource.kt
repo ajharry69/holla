@@ -11,16 +11,16 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SnapshotMetadata
 import com.google.firebase.storage.FirebaseStorage
 import com.xently.holla.FBCollection
+import com.xently.holla.FBCollection.MESSAGES
 import com.xently.holla.Log
 import com.xently.holla.data.Result
+import com.xently.holla.data.Source
 import com.xently.holla.data.model.Contact
 import com.xently.holla.data.source.schema.IBaseDataSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 
 abstract class BaseDataSource internal constructor(private val context: Context) : IBaseDataSource {
-
-    enum class Source { REMOTE, LOCAL }
 
     private val observableException = MutableLiveData<Exception>()
 
@@ -40,9 +40,9 @@ abstract class BaseDataSource internal constructor(private val context: Context)
      * @throws AssertionError if [FirebaseAuth.getCurrentUser] returns `null`
      */
     @Throws(AssertionError::class)
-    protected fun getMyMessagesCollection(): CollectionReference {
+    protected fun getMyMessagesCollection(contactId: String): CollectionReference {
         return chatsCollection.document(firebaseAuth.currentUser!!.uid)
-            .collection(FBCollection.MESSAGES)
+            .collection(MESSAGES).document(contactId).collection(MESSAGES)
     }
 
     /**
@@ -65,7 +65,7 @@ abstract class BaseDataSource internal constructor(private val context: Context)
 
     @Throws(AssertionError::class)
     protected fun getChatMateMessagesCollection(mateId: String): CollectionReference {
-        return chatsCollection.document(mateId).collection(FBCollection.MESSAGES)
+        return chatsCollection.document(mateId).collection(MESSAGES)
     }
 
     @Throws(AssertionError::class)

@@ -11,12 +11,13 @@ import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.xently.holla.R
+import com.xently.holla.adapters.diffutils.MessageDiffUtil
 import com.xently.holla.adapters.list.MessageListAdapter.MessageViewHolder
 import com.xently.holla.data.model.Message
 import com.xently.holla.databinding.MessageItemBinding
 import com.xently.xui.adapters.list.ListAdapter
 
-class MessageListAdapter : ListAdapter<Message, MessageViewHolder>(ChatDiffUtil()) {
+class MessageListAdapter : ListAdapter<Message, MessageViewHolder>(MessageDiffUtil()) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
         return MessageViewHolder(
             MessageItemBinding.inflate(

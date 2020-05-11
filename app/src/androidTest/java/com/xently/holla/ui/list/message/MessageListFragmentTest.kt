@@ -19,7 +19,7 @@ class MessageListFragmentTest {
         navController = Mockito.mock(NavController::class.java)
         scenario = launchFragmentInContainer(
             themeResId = R.style.AppTheme,
-            factory = MessageListFragmentFactory(Contact())
+            factory = MessageListFragmentFactory(MessageListFragmentArgs(Contact(), -2).toBundle())
         )
         with(scenario) {
             onFragment {

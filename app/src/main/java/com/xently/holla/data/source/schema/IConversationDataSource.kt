@@ -3,12 +3,25 @@ package com.xently.holla.data.source.schema
 import androidx.lifecycle.LiveData
 import com.google.android.gms.tasks.Task
 import com.xently.holla.data.Result
+import com.xently.holla.data.Source
 import com.xently.holla.data.model.Conversation
 
 interface IConversationDataSource : IBaseDataSource {
     suspend fun getObservableConversations(): LiveData<List<Conversation>>
     suspend fun saveConversation(conversation: Conversation): Result<Unit>
     suspend fun saveConversations(conversations: List<Conversation>): Result<Unit>
-    suspend fun deleteConversation(conversation: Conversation): Task<Void>?
+
+    /**
+     * @param source specifies from where [id] is to be deleted. `null` means delete from
+     * all(remote & cache) sources
+     */
+    suspend fun deleteConversation(id: String, source: Source?): Result<Unit>
+
+    /**
+     * @param source specifies from where [conversation] is to be deleted. `null` means delete from
+     * all(remote & cache) sources
+     */
+    suspend fun deleteConversation(conversation: Conversation, source: Source? = null): Task<Void>?
+    suspend fun getConversation(mateId: String): Conversation?
     suspend fun getConversations(): List<Conversation>
 }

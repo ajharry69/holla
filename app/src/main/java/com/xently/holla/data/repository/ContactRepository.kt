@@ -1,6 +1,5 @@
 package com.xently.holla.data.repository
 
-import android.app.Activity
 import com.xently.holla.data.model.Contact
 import com.xently.holla.data.repository.schema.IContactRepository
 import com.xently.holla.data.source.schema.IContactDataSource
@@ -13,8 +12,8 @@ class ContactRepository internal constructor(
 
     override fun getLocalContact(contact: Contact) = localDataSource.getLocalContact(contact)
 
-    override suspend fun getContactList(activity: Activity): List<Contact> {
-        val result = remoteDataSource.getContactList(activity)
+    override suspend fun getContactList(): List<Contact> {
+        val result = remoteDataSource.getContactList()
         localDataSource.saveContacts(result) // Cache contacts
         return result
     }

@@ -4,13 +4,15 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
-import com.xently.holla.data.model.Chat
+import com.google.firebase.Timestamp
 import com.xently.holla.data.model.Contact
 import com.xently.holla.data.model.Conversation
 import com.xently.holla.data.model.Message
-import com.xently.holla.data.source.schema.dao.MessageDao
+import com.xently.holla.data.model.Type
 import com.xently.holla.data.source.schema.dao.ContactDao
 import com.xently.holla.data.source.schema.dao.ConversationDao
+import com.xently.holla.data.source.schema.dao.MessageDao
+import java.util.*
 
 @Database(
     entities = [
@@ -21,7 +23,7 @@ import com.xently.holla.data.source.schema.dao.ConversationDao
     exportSchema = true,
     version = 1
 )
-@TypeConverters(ChatTypeConverter::class)
+@TypeConverters(ChatTypeConverter::class, TimestampConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract val chatDao: MessageDao
 
@@ -32,8 +34,16 @@ abstract class AppDatabase : RoomDatabase() {
 
 class ChatTypeConverter {
     @TypeConverter
-    fun fromTypeToString(type: Chat.Type): String = type.name
+    fun fromTypeToString(type: Type): String = type.name
 
     @TypeConverter
-    fun fromStringToType(type: String): Chat.Type = Chat.Type.valueOf(type)
+    fun fromStringToType(type: String): Type = Type.valueOf(type)
+}
+
+class TimestampConverter {
+    @TypeConverter
+    fun fromTimestampToInt(timestamp: Timestamp): Long = timestamp.toDate().time
+
+    @TypeConverter
+    fun fromIntToTimestamp(timestamp: Long): Timestamp = Timestamp(Date(timestamp))
 }

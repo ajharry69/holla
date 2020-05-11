@@ -60,7 +60,7 @@ class FCMService : FirebaseMessagingService() {
                     buildAndSendNotification(localContact.name ?: title, body ?: data["body"])
                 } else {
                     val conversationContact = Contact.fromJson(data["conversationContact"])
-                    vm.getConversations(conversationContact)
+                    vm.getMessages(conversationContact)
                 }
             }
         }

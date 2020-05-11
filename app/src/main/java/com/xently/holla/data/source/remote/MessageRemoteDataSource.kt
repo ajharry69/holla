@@ -5,16 +5,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import com.google.android.gms.tasks.Task
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.firestore.CollectionReference
 import com.xently.holla.data.Result
-import com.xently.holla.data.getObject
-import com.xently.holla.data.model.Chat
-import com.xently.holla.data.model.ChatCreator.Fields
+import com.xently.holla.data.Source
+import com.xently.holla.data.data
+import com.xently.holla.data.getObjects
 import com.xently.holla.data.model.Contact
-import com.xently.holla.data.model.Conversation
 import com.xently.holla.data.model.Message
-import com.xently.holla.data.source.schema.IConversationDataSource
 import com.xently.holla.data.source.schema.IMessageDataSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,137 +18,75 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
-class MessageRemoteDataSource internal constructor(
-    context: Context,
-    private val remoteDataSource: IConversationDataSource?
-) : BaseRemoteDataSource(context), IMessageDataSource {
-
-    private val messagesCollection: CollectionReference
-        get() = getMyMessagesCollection()
+class MessageRemoteDataSource internal constructor(context: Context) :
+    BaseRemoteDataSource(context), IMessageDataSource {
 
     private val observableMessageList = MutableLiveData<List<Message>>(null)
 
-    override suspend fun getObservableChats(contact: Contact): LiveData<List<Message>> {
+    override suspend fun getObservableMessages(contact: Contact) = getObservableMessages(contact.id)
+
+    override suspend fun getObservableMessages(contactId: String): LiveData<List<Message>> {
         return Transformations.map(observableMessageList) { chatList ->
             if (chatList == null) return@map null
             chatList.sortedByDescending { it.timeSent }
         }
     }
 
-    override suspend fun sendMessage(message: Message): Result<Unit> {
-        val messageId = messagesCollection.document().id
+    override suspend fun sendMessage(message: Message): Result<Message> {
+        val collection = getMyMessagesCollection(message.receiverId)
+        val messageId = collection.document().id
         val msg = message.copy(id = messageId, senderId = firebaseAuth.currentUser?.uid.toString())
-        val result = messagesCollection.document(messageId).set(msg).execute()
+        val result = collection.document(messageId).set(msg).execute()
         return if (result is Result.Success) {
-            // TODO: Replace with could function method
-            remoteDataSource?.saveConversation(
-                Conversation(
-                    id = msg.id,
-                    body = msg.body,
-                    receiverId = msg.receiverId,
-                    senderId = msg.senderId,
-                    type = Chat.Type.valueOf(msg.type.name),
-                    mediaUrl = msg.mediaUrl,
-                    sent = msg.sent,
-                    read = msg.read,
-                    deleteFromSender = msg.deleteFromSender,
-                    deleteFromReceiver = msg.deleteFromReceiver,
-                    timeSent = msg.timeSent,
-                    sender = msg.sender,
-                    receiver = msg.receiver
-                )
-            )
-            Result.Success(Unit)
+            Result.Success(msg)
         } else result as Result.Error
     }
 
-    override suspend fun sendMessages(messages: List<Message>): Result<Unit> {
-        // TODO: Delete conversation if all messages in a chat have been deleted
+    override suspend fun sendMessages(messages: List<Message>): Result<List<Message>> {
+        val msgs = arrayListOf<Message>()
         withContext(Dispatchers.IO) {
             messages.forEach {
                 launch {
-                    sendMessage(it)
+                    sendMessage(it).data?.let {
+                        msgs += it
+                    }
                 }
             }
         }
+        return Result.Success(msgs)
+    }
+
+    override suspend fun deleteMessage(message: Message, source: Source?): Task<Void>? {
+        return getMyMessagesCollection(message.receiverId).document(message.id).delete()
+            .addOnCompleteListener {
+                if (it.isSuccessful) runBlocking {
+                    launch { observableMessageList.deleteChatIfPresent(message) }
+                }
+            }
+    }
+
+    override suspend fun deleteMessage(id: String, source: Source?): Result<Unit> {
+        // Unimplemented
         return Result.Success(Unit)
     }
 
-    override suspend fun deleteMessage(message: Message): Task<Void>? {
-        // TODO: Use the NEW last sent text as the new conversation if the deleted message was the latest
-        return messagesCollection.document(message.id).delete().addOnCompleteListener {
-            if (it.isSuccessful) runBlocking { observableMessageList.deleteChatIfPresent(message) }
-        }
+    override suspend fun deleteMessages(contactId: String, source: Source?): Result<Unit> {
+        // Unimplemented
+        return Result.Success(Unit)
     }
 
-    override suspend fun getChats(contact: Contact): List<Message> {
-        try {
-            val currentUser =
-                firebaseAuth.currentUser ?: throw Exception("Authentication is required")
-            val currentUserId = currentUser.uid
-            val chatListAsSender = withContext(Dispatchers.IO) {
-                messagesCollection.whereEqualTo(Fields.SENDER, contact.id)
-                    .whereEqualTo(Fields.RECEIVER, currentUserId)
-                    .get().await().toObjects(Message::class.java)
+    override suspend fun getMessages(contact: Contact) = getMessages(contact.id)
+
+    override suspend fun getMessages(contactId: String): List<Message> {
+        return try {
+            getMyMessagesCollection(contactId).get().await().getObjects<Message>().apply {
+                observableMessageList.refreshList(this)
             }
-
-            val chatListAsReceiver = withContext(Dispatchers.IO) {
-                messagesCollection.whereEqualTo(Fields.RECEIVER, contact.id)
-                    .whereEqualTo(Fields.SENDER, currentUserId)
-                    .get().await().toObjects(Message::class.java)
-            }
-
-            val chatList = (chatListAsReceiver + chatListAsSender).withContacts(currentUser)
-
-            observableMessageList.refreshList(chatList)
-
-            return chatList
         } catch (ex: Exception) {
             setException(ex)
             observableMessageList.refreshList(emptyList())
-            return emptyList()
+            emptyList()
         }
-    }
-
-    private suspend fun List<Message>.withContacts(user: FirebaseUser): ArrayList<Message> {
-        val userId = user.uid
-        val chatList = arrayListOf<Message>()
-
-        for (chat in this) {
-            when {
-                chat.senderId == userId -> {
-                    val sender = getLocalContact(
-                        chat.sender.copy(
-                            id = userId,
-                            mobileNumber = user.phoneNumber
-                        )
-                    )
-                    val receiver =
-                        usersCollection.whereEqualTo(Contact.CREATOR.Fields.ID, chat.receiverId)
-                            .limit(1).get().await()
-                    chatList += chat.copy(
-                        sender = sender,
-                        receiver = getLocalContact(receiver.getObject(chat.receiver))
-                    )
-                }
-                chat.receiverId == userId -> {
-                    val receiver = getLocalContact(
-                        chat.receiver.copy(
-                            id = userId,
-                            mobileNumber = user.phoneNumber
-                        )
-                    )
-                    val sender =
-                        usersCollection.whereEqualTo(Contact.CREATOR.Fields.ID, chat.senderId)
-                            .limit(1).get().await()
-                    chatList += chat.copy(
-                        sender = getLocalContact(sender.getObject(chat.sender)),
-                        receiver = receiver
-                    )
-                }
-            }
-        }
-        return chatList
     }
 
     private suspend fun MutableLiveData<List<Message>>.deleteChatIfPresent(message: Message) {

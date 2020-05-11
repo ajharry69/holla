@@ -3,6 +3,7 @@ package com.xently.holla.data.model
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.xently.holla.utils.IData
 import com.xently.holla.utils.JSON_CONVERTER
@@ -10,12 +11,12 @@ import com.xently.holla.utils.objectFromJson
 
 @Entity
 data class Contact(
-    @PrimaryKey(autoGenerate = false) val id: String = "",
-    val name: String? = null,
-    val mobileNumber: String? = null,
-    val profilePictureUrl: String? = null,
-    val status: String? = "Hey there! I am using Holla",
-    val fcmToken: String? = null
+    @PrimaryKey(autoGenerate = false) var id: String = "",
+    var name: String? = null,
+    var mobileNumber: String? = null,
+    var profilePictureUrl: String? = null,
+    var status: String? = "Hey there! I am using Holla",
+    @Ignore var fcmToken: String? = null
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString()!!,

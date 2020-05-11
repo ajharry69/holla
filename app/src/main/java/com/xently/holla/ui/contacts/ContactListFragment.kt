@@ -48,7 +48,7 @@ class ContactListFragment : CoreListFragment<Contact>() {
     }
 
     override fun onListItemClick(model: Contact, view: View) {
-        view.findNavController().navigate(actionMessage(model))
+        view.findNavController().navigate(actionMessage(model, model.id))
     }
 
     override fun onListItemLongClick(model: Contact, view: View): Boolean {

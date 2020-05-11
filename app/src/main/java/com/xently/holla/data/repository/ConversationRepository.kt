@@ -2,6 +2,9 @@ package com.xently.holla.data.repository
 
 import com.google.android.gms.tasks.Task
 import com.xently.holla.data.Result
+import com.xently.holla.data.Source
+import com.xently.holla.data.Source.LOCAL
+import com.xently.holla.data.Source.REMOTE
 import com.xently.holla.data.model.Contact
 import com.xently.holla.data.model.Conversation
 import com.xently.holla.data.repository.schema.IConversationRepository
@@ -33,15 +36,38 @@ class ConversationRepository internal constructor(
         } else result as Result.Error
     }
 
-    override suspend fun deleteConversation(conversation: Conversation): Task<Void>? {
-        val result = remoteDataSource.deleteConversation(conversation)
-        if (result != null) localDataSource.deleteConversation(conversation)
-        return result
+    override suspend fun deleteConversation(id: String, source: Source?): Result<Unit> {
+        return when (source) {
+            REMOTE -> remoteDataSource.deleteConversation(id, source)
+            LOCAL -> localDataSource.deleteConversation(id, source)
+            null -> remoteDataSource.deleteConversation(id, source).run {
+                localDataSource.deleteConversation(id, source)
+            }
+        }
+    }
+
+    override suspend fun deleteConversation(
+        conversation: Conversation,
+        source: Source?
+    ): Task<Void>? {
+        return when (source) {
+            REMOTE -> remoteDataSource.deleteConversation(conversation, source)
+            LOCAL -> localDataSource.deleteConversation(conversation, source)
+            null -> remoteDataSource.deleteConversation(conversation, source)?.run {
+                localDataSource.deleteConversation(conversation, source)
+            }
+        }
+    }
+
+    override suspend fun getConversation(mateId: String): Conversation? {
+        return remoteDataSource.getConversation(mateId)?.apply {
+            localDataSource.saveConversation(this)
+        }
     }
 
     override suspend fun getConversations(): List<Conversation> {
-        val result = remoteDataSource.getConversations()
-        localDataSource.saveConversations(result)
-        return result
+        return remoteDataSource.getConversations().apply {
+            localDataSource.saveConversations(this)
+        }
     }
 }

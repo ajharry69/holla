@@ -3,15 +3,17 @@ package com.xently.holla.adapters.list
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.xently.holla.adapters.list.ConversationListAdapter.ChatViewHolder
-import com.xently.holla.data.model.Message
+import com.xently.holla.adapters.diffutils.ConversationDiffUtil
+import com.xently.holla.adapters.list.ConversationListAdapter.ConversationViewHolder
+import com.xently.holla.data.model.Conversation
 import com.xently.holla.databinding.ConversationItemBinding
 import com.xently.xui.adapters.list.ListAdapter
 
-class ConversationListAdapter : ListAdapter<Message, ChatViewHolder>(ChatDiffUtil()) {
+class ConversationListAdapter :
+    ListAdapter<Conversation, ConversationViewHolder>(ConversationDiffUtil()) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
-        return ChatViewHolder(
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ConversationViewHolder {
+        return ConversationViewHolder(
             ConversationItemBinding.inflate(
                 LayoutInflater.from(parent.context),
                 parent,
@@ -20,16 +22,16 @@ class ConversationListAdapter : ListAdapter<Message, ChatViewHolder>(ChatDiffUti
         )
     }
 
-    override fun onBindViewHolder(holder: ChatViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ConversationViewHolder, position: Int) {
         super.onBindViewHolder(holder, position)
         holder.bind(getItem(position))
     }
 
-    inner class ChatViewHolder internal constructor(private val binding: ConversationItemBinding) :
+    inner class ConversationViewHolder internal constructor(private val binding: ConversationItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(chat: Message) {
-            binding.conversation = chat
+        fun bind(conversation: Conversation) {
+            binding.conversation = conversation
         }
     }
 }

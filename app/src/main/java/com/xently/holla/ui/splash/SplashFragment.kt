@@ -25,6 +25,7 @@ import com.xently.holla.data.Result
 import com.xently.holla.databinding.SplashFragmentBinding
 import com.xently.holla.utils.Type
 import com.xently.xui.Fragment
+import com.xently.xui.utils.ui.fragment.showSnackBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

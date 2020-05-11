@@ -161,7 +161,7 @@ object ServiceLocator {
         val local = this.localMessageDataSource
             ?: MessageLocalDataSource(context, db.chatDao, localConversationDS)
         val remote =
-            this.remoteMessageDataSource ?: MessageRemoteDataSource(context, remoteConversationDS)
+            this.remoteMessageDataSource ?: MessageRemoteDataSource(context)
 
         this.localMessageDataSource = local
         this.remoteMessageDataSource = remote

@@ -25,15 +25,21 @@ interface MessageDao {
     @Query("SELECT * FROM Message WHERE id = :id")
     suspend fun getMessage(id: String): Message
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun saveMessage(chat: Message): Int
+    @Insert(onConflict = OnConflictStrategy.REPLACE, entity = Message::class)
+    suspend fun saveMessage(message: Message)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun saveMessages(chats: List<Message>): Int
+    @Insert(onConflict = OnConflictStrategy.REPLACE, entity = Message::class)
+    suspend fun saveMessages(messages: List<Message>)
 
-    @Delete
-    suspend fun deleteMessage(chat: Message): Int
+    @Delete(entity = Message::class)
+    suspend fun deleteMessage(message: Message): Int
+
+    @Query("DELETE FROM message WHERE id = :id")
+    suspend fun deleteMessage(id: String): Int
 
     @Query("DELETE from Message")
     suspend fun deleteMessages()
+
+    @Query("DELETE from Message WHERE senderId = :contactId OR receiverId = :contactId")
+    suspend fun deleteMessages(contactId: String)
 }

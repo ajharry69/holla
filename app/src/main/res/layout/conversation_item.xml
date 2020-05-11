@@ -5,11 +5,11 @@
 
     <data>
 
-        <import type="com.xently.holla.data.model.Message" />
+        <import type="com.xently.holla.data.model.Conversation" />
 
         <variable
             name="conversation"
-            type="Message" />
+            type="Conversation" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -35,7 +35,7 @@
             android:id="@+id/name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@{ conversation.conversationName ?? @string/default_name}"
+            android:text="@{ conversation.mate.name ?? @string/default_name}"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@id/message"

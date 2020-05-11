@@ -30,7 +30,7 @@ class UserRemoteDataSource internal constructor(private val context: Context) :
             Type.CREATE -> usersCollection.document(contact.id).set(contact)
             Type.UPDATE -> usersCollection.document(contact.id).set(contact, SetOptions.merge())
         }.execute()
-        setContact(firebaseAuth.currentUser)
+        setContact(user)
         return if (task is Result.Success) {
             Result.Success(Unit)
         } else task as Result.Error

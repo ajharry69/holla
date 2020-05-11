@@ -5,41 +5,54 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentFactory
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.navArgs
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.xently.holla.App
 import com.xently.holla.R
 import com.xently.holla.adapters.list.MessageListAdapter
 import com.xently.holla.data.model.Message
-import com.xently.holla.data.model.Contact
-import com.xently.holla.ui.list.ChatListFragment
-import com.xently.holla.viewmodels.ChatViewModel
+import com.xently.holla.ui.CoreListFragment
+import com.xently.holla.viewmodels.MessageViewModel
 
-class MessageListFragment : ChatListFragment() {
-    private val args: MessageListFragmentArgs by navArgs()
+class MessageListFragment : CoreListFragment<Message>() {
+    private val args: MessageListFragmentArgs? by lazy {
+        arguments?.let { MessageListFragmentArgs.fromBundle(it) }
+    }
 
-    override val contact: Contact? by lazy {
-        arguments?.getParcelable(ARG_KEY_CONTACT) ?: args.argsContact
+    private val listAdapter: MessageListAdapter by lazy {
+        MessageListAdapter().apply {
+            listItemClickListener = this@MessageListFragment
+        }
     }
 
     override val noDataText: CharSequence?
         get() = getString(R.string.no_messages)
 
-    override val viewModel: ChatViewModel by viewModels {
+    override val viewModel: MessageViewModel by viewModels {
         MessageListViewModelFactory((requireContext().applicationContext as App).chatRepository)
     }
 
-    override val listAdapter: MessageListAdapter by lazy {
-        MessageListAdapter().apply {
-            listItemClickListener = this@MessageListFragment
-        }
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        val contactId: String = args?.argsContact?.id ?: args?.contactId ?: return
+        viewModel.getObservableMessages(contactId).observe(viewLifecycleOwner, Observer {
+            onObservableListChanged(it)
+
+            listAdapter.submitList(it)
+        })
+    }
+
+    override fun onRefreshRequested(forced: Boolean) {
+        val contactId: String = args?.argsContact?.id ?: args?.contactId ?: return
+        viewModel.getMessages(contactId)
     }
 
     override fun onListItemClick(model: Message, view: View) = Unit
 
     override fun onCreateRecyclerView(recyclerView: RecyclerView): RecyclerView {
         return super.onCreateRecyclerView(recyclerView).apply {
+            adapter = listAdapter
             layoutManager = LinearLayoutManager(requireContext()).apply {
                 reverseLayout = true
 //                stackFromEnd = true
@@ -53,18 +66,15 @@ class MessageListFragment : ChatListFragment() {
     }
 
     companion object {
-        private const val ARG_KEY_CONTACT = "ARG_KEY_CONTACT"
-        fun newInstance(contact: Contact): MessageListFragment = MessageListFragment().apply {
-            arguments = Bundle().apply {
-                putParcelable(ARG_KEY_CONTACT, contact)
-            }
+        fun newInstance(bundle: Bundle) = MessageListFragment().apply {
+            arguments = bundle
         }
     }
 }
 
-class MessageListFragmentFactory(private val contact: Contact) : FragmentFactory() {
+class MessageListFragmentFactory(private val bundle: Bundle) : FragmentFactory() {
     override fun instantiate(classLoader: ClassLoader, className: String): Fragment =
-        MessageListFragment.newInstance(contact)
+        MessageListFragment.newInstance(bundle)
 }
 
 

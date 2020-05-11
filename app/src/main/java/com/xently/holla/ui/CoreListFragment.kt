@@ -11,6 +11,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.xently.holla.R
 import com.xently.holla.viewmodels.BaseViewModel
 import com.xently.xui.ListFragment
+import com.xently.xui.utils.ui.fragment.requestFeaturePermission
+import com.xently.xui.utils.ui.fragment.showSnackBar
 
 abstract class CoreListFragment<T> : ListFragment<T>(), FirebaseAuth.AuthStateListener {
     private var snackbar: Snackbar? = null

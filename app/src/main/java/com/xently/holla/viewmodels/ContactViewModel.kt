@@ -9,7 +9,7 @@ import kotlinx.coroutines.runBlocking
 abstract class ContactViewModel(private val repository: IContactRepository) :
     BaseViewModel(repository) {
     fun getContactList(activity: Activity) = runBlocking(viewModelScope.coroutineContext) {
-        repository.getContactList(activity)
+        repository.getContactList()
     }
 
     fun getObservableContactList() = liveData(viewModelScope.coroutineContext) {

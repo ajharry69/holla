@@ -1,6 +1,5 @@
 package com.xently.holla.data.source.schema
 
-import android.app.Activity
 import androidx.lifecycle.LiveData
 import com.xently.holla.data.model.Contact
 
@@ -10,7 +9,7 @@ import com.xently.holla.data.model.Contact
  * in phone)
  */
 interface IContactDataSource : IBaseDataSource {
-    suspend fun getContactList(activity: Activity): List<Contact>
+    suspend fun getContactList(): List<Contact>
 
     suspend fun getContact(id: String): Contact?
 

@@ -1,6 +1,5 @@
 package com.xently.holla.data.source.local
 
-import android.app.Activity
 import android.content.Context
 import com.xently.holla.data.model.Contact
 import com.xently.holla.data.source.schema.IContactDataSource
@@ -8,7 +7,7 @@ import com.xently.holla.data.source.schema.dao.ContactDao
 
 class ContactLocalDataSource internal constructor(private val dao: ContactDao, context: Context) :
     BaseLocalDataSource(context), IContactDataSource {
-    override suspend fun getContactList(activity: Activity) = dao.getContacts()
+    override suspend fun getContactList() = dao.getContacts()
 
     override suspend fun getContact(id: String) = dao.getContact(id)
 
