@@ -124,12 +124,12 @@ class SplashFragment : Fragment() {
             if (metadata.creationTimestamp == metadata.lastSignInTimestamp) {
                 // The user is new, show them a fancy intro screen!
                 viewModel.saveContact().also {
-                    if (it is Result.Error) {
-                        showSnackBar(R.string.sign_in_failed)
+                    when (it) {
+                        is Result.Success -> show() // TODO: Navigate to home screen...
+                        is Result.Error ->
+                            showSnackBar(R.string.sign_in_failed)
+                        Result.Loading -> Unit
                     }
-
-                    // TODO: Navigate to home screen...
-                    if (it is Result.Success) show()
                 }
             } else viewModel.saveContact(Type.UPDATE)
         }

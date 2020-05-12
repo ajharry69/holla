@@ -1,7 +1,6 @@
 package com.xently.holla.data.source.schema
 
 import androidx.lifecycle.LiveData
-import com.google.android.gms.tasks.Task
 import com.xently.holla.data.Result
 import com.xently.holla.data.Source
 import com.xently.holla.data.model.Contact
@@ -22,7 +21,7 @@ interface IMessageDataSource : IBaseDataSource {
      * @param source specifies from where [message] is to be deleted. `null` means delete from
      * all(remote & cache) sources
      */
-    suspend fun deleteMessage(message: Message, source: Source? = null): Task<Void>?
+    suspend fun deleteMessage(message: Message, source: Source? = null): Result<Unit>
 
     /**
      * @param source specifies from where message with [id] is to be deleted. `null` means delete

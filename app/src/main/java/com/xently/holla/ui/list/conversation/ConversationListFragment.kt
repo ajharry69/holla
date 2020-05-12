@@ -7,6 +7,8 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
 import androidx.navigation.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.xently.holla.App
 import com.xently.holla.R
 import com.xently.holla.adapters.list.ConversationListAdapter
@@ -50,5 +52,12 @@ class ConversationListFragment : CoreListFragment<Conversation>() {
 
     override fun onListItemClick(model: Conversation, view: View) {
         view.findNavController().navigate(actionMessage(model.mate, model.mateId))
+    }
+
+    override fun onCreateRecyclerView(rv: RecyclerView): RecyclerView {
+        return super.onCreateRecyclerView(rv).apply {
+            adapter = listAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+        }
     }
 }

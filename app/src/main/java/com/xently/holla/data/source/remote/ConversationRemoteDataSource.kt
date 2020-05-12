@@ -3,7 +3,9 @@ package com.xently.holla.data.source.remote
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.Query.Direction
 import com.xently.holla.data.*
+import com.xently.holla.data.model.ChatCreator.Fields
 import com.xently.holla.data.model.Conversation
 import com.xently.holla.data.source.schema.IConversationDataSource
 import kotlinx.coroutines.Dispatchers
@@ -78,9 +80,10 @@ class ConversationRemoteDataSource internal constructor(context: Context) :
         conversationsCollection.document(mateId).get().await().getObject<Conversation>()
 
     override suspend fun getConversations() =
-        conversationsCollection.get().await().getObjects<Conversation>().apply {
-            observableConversationList.refreshList(this)
-        }
+        conversationsCollection.orderBy(Fields.TIME_SENT, Direction.DESCENDING)
+            .get().await().getObjects<Conversation>().apply {
+                observableConversationList.refreshList(this)
+            }
 
     private suspend fun MutableLiveData<List<Conversation>>.deleteConversationIfPresent(conversation: Conversation) {
         withContext(Dispatchers.Default) {

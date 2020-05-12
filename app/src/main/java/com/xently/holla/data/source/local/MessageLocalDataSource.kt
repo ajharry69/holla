@@ -1,21 +1,16 @@
 package com.xently.holla.data.source.local
 
 import android.content.Context
-import com.google.android.gms.tasks.Task
 import com.xently.holla.data.Result
 import com.xently.holla.data.Source
 import com.xently.holla.data.model.Contact
-import com.xently.holla.data.model.Conversation
 import com.xently.holla.data.model.Message
-import com.xently.holla.data.model.Type
-import com.xently.holla.data.source.schema.IConversationDataSource
 import com.xently.holla.data.source.schema.IMessageDataSource
 import com.xently.holla.data.source.schema.dao.MessageDao
 
 class MessageLocalDataSource internal constructor(
     context: Context,
-    private val dao: MessageDao,
-    private val localDataSource: IConversationDataSource?
+    private val dao: MessageDao
 ) : BaseLocalDataSource(context), IMessageDataSource {
     override suspend fun getObservableMessages(contact: Contact) =
         dao.getObservableMessages(contact.id)
@@ -25,23 +20,7 @@ class MessageLocalDataSource internal constructor(
 
     override suspend fun sendMessage(message: Message): Result<Message> {
         dao.saveMessage(message)
-        localDataSource?.saveConversation(
-            Conversation(
-                id = message.id,
-                body = message.body,
-                receiverId = message.receiverId,
-                senderId = message.senderId,
-                type = Type.valueOf(message.type.name),
-                mediaUrl = message.mediaUrl,
-                sent = message.sent,
-                read = message.read,
-                deleteFromSender = message.deleteFromSender,
-                deleteFromReceiver = message.deleteFromReceiver,
-                timeSent = message.timeSent
-            ),
-
-        )
-        return Result.Success(message)
+        return Result.Success(dao.getMessage(message.id))
     }
 
     override suspend fun sendMessages(messages: List<Message>): Result<List<Message>> {
@@ -49,9 +28,9 @@ class MessageLocalDataSource internal constructor(
         return Result.Success(messages)
     }
 
-    override suspend fun deleteMessage(message: Message, source: Source?): Task<Void>? {
+    override suspend fun deleteMessage(message: Message, source: Source?): Result<Unit> {
         dao.deleteMessage(message)
-        return null
+        return Result.Success(Unit)
     }
 
     override suspend fun deleteMessage(id: String, source: Source?): Result<Unit> {

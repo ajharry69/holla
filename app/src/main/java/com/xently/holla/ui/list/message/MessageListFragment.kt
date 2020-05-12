@@ -50,8 +50,8 @@ class MessageListFragment : CoreListFragment<Message>() {
 
     override fun onListItemClick(model: Message, view: View) = Unit
 
-    override fun onCreateRecyclerView(recyclerView: RecyclerView): RecyclerView {
-        return super.onCreateRecyclerView(recyclerView).apply {
+    override fun onCreateRecyclerView(rv: RecyclerView): RecyclerView {
+        return super.onCreateRecyclerView(rv).apply {
             adapter = listAdapter
             layoutManager = LinearLayoutManager(requireContext()).apply {
                 reverseLayout = true
@@ -59,7 +59,7 @@ class MessageListFragment : CoreListFragment<Message>() {
             }
             addOnLayoutChangeListener { _, _, _, _, bottom, _, _, _, oldBottom ->
                 if (bottom < oldBottom) {
-                    recyclerView.postDelayed({ recyclerView.smoothScrollToPosition(0) }, 100)
+                    rv.postDelayed({ rv.smoothScrollToPosition(0) }, 100)
                 }
             }
         }

@@ -22,7 +22,7 @@
             android:id="@+id/logo"
             android:layout_width="@dimen/logo_size"
             android:layout_height="@dimen/logo_size"
-            android:background="@color/colorTransparent"
+            android:background="@android:color/transparent"
             android:contentDescription="@string/content_desc_logo"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

@@ -76,7 +76,7 @@ data class Message(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Chat
+        other as Message
 
         if (id != other.id) return false
         if (body != other.body) return false

@@ -11,7 +11,10 @@ import androidx.lifecycle.Transformations
 import com.xently.holla.data.model.Contact
 import com.xently.holla.data.model.Contact.CREATOR.Fields
 import com.xently.holla.data.source.schema.IContactDataSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class ContactRemoteDataSource internal constructor(private val context: Context) :
     BaseRemoteDataSource(context), IContactDataSource {
@@ -19,7 +22,7 @@ class ContactRemoteDataSource internal constructor(private val context: Context)
     private val observableContactList = MutableLiveData<List<Contact>>(null)
 
     @RequiresPermission(Manifest.permission.READ_CONTACTS)
-    override suspend fun getContactList(): List<Contact> {
+    override suspend fun getContactList(): List<Contact> = withContext(Dispatchers.IO) {
         val contactList = arrayListOf<Contact>()
 
         context.contentResolver.query(
@@ -38,10 +41,12 @@ class ContactRemoteDataSource internal constructor(private val context: Context)
 
                 // Skip current user's phone number
                 if (mobileNumber == firebaseAuth.currentUser?.phoneNumber) continue
-                contactList.addIfRegistered(Contact("", name, mobileNumber))
+                launch(Dispatchers.IO) {
+                    contactList.addIfRegistered(Contact("", name, mobileNumber))
+                }
             }
         }
-        return contactList
+        contactList
     }
 
     override suspend fun getContact(id: String): Contact? = null
@@ -74,6 +79,6 @@ class ContactRemoteDataSource internal constructor(private val context: Context)
     }
 
     private fun setContactList(list: Iterable<Contact>) {
-        observableContactList.value = list.toList()
+        observableContactList.postValue(list.toList())
     }
 }

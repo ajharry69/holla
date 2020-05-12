@@ -4,17 +4,17 @@ import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
-import com.google.android.gms.tasks.Task
+import com.google.firebase.firestore.Query.Direction
 import com.xently.holla.data.Result
 import com.xently.holla.data.Source
 import com.xently.holla.data.data
 import com.xently.holla.data.getObjects
+import com.xently.holla.data.model.ChatCreator.Fields
 import com.xently.holla.data.model.Contact
 import com.xently.holla.data.model.Message
 import com.xently.holla.data.source.schema.IMessageDataSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
@@ -42,27 +42,27 @@ class MessageRemoteDataSource internal constructor(context: Context) :
         } else result as Result.Error
     }
 
-    override suspend fun sendMessages(messages: List<Message>): Result<List<Message>> {
+    override suspend fun sendMessages(messages: List<Message>) = withContext(Dispatchers.IO) {
         val msgs = arrayListOf<Message>()
-        withContext(Dispatchers.IO) {
-            messages.forEach {
-                launch {
-                    sendMessage(it).data?.let {
-                        msgs += it
-                    }
+        messages.forEach {
+            launch {
+                sendMessage(it).data?.let {
+                    msgs += it
                 }
             }
         }
-        return Result.Success(msgs)
+        Result.Success(msgs)
     }
 
-    override suspend fun deleteMessage(message: Message, source: Source?): Task<Void>? {
-        return getMyMessagesCollection(message.receiverId).document(message.id).delete()
-            .addOnCompleteListener {
-                if (it.isSuccessful) runBlocking {
-                    launch { observableMessageList.deleteChatIfPresent(message) }
-                }
-            }
+    override suspend fun deleteMessage(message: Message, source: Source?): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            val result =
+                getMyMessagesCollection(message.receiverId).document(message.id).delete().execute()
+            if (result is Result.Success) {
+                launch { observableMessageList.deleteChatIfPresent(message) }
+                Result.Success(Unit)
+            } else result as Result.Error
+        }
     }
 
     override suspend fun deleteMessage(id: String, source: Source?): Result<Unit> {
@@ -79,9 +79,10 @@ class MessageRemoteDataSource internal constructor(context: Context) :
 
     override suspend fun getMessages(contactId: String): List<Message> {
         return try {
-            getMyMessagesCollection(contactId).get().await().getObjects<Message>().apply {
-                observableMessageList.refreshList(this)
-            }
+            getMyMessagesCollection(contactId).orderBy(Fields.TIME_SENT, Direction.DESCENDING).get()
+                .await().getObjects<Message>().apply {
+                    observableMessageList.refreshList(this)
+                }
         } catch (ex: Exception) {
             setException(ex)
             observableMessageList.refreshList(emptyList())

@@ -7,13 +7,13 @@ import com.xently.holla.data.model.Conversation
 @Dao
 interface ConversationDao {
 
-    @Query("SELECT * FROM Conversation")
+    @Query("SELECT * FROM Conversation ORDER BY timeSent DESC")
     fun getObservableConversations(): LiveData<List<Conversation>>
 
     @Query("SELECT * FROM Conversation WHERE mateId = :mateId")
     fun getObservableConversation(mateId: String): LiveData<Conversation>
 
-    @Query("SELECT * FROM Conversation")
+    @Query("SELECT * FROM Conversation ORDER BY timeSent DESC")
     fun getConversations(): List<Conversation>
 
     @Query("SELECT * FROM Conversation WHERE mateId = :mateId")

@@ -12,10 +12,8 @@ class ContactRepository internal constructor(
 
     override fun getLocalContact(contact: Contact) = localDataSource.getLocalContact(contact)
 
-    override suspend fun getContactList(): List<Contact> {
-        val result = remoteDataSource.getContactList()
-        localDataSource.saveContacts(result) // Cache contacts
-        return result
+    override suspend fun getContactList() = remoteDataSource.getContactList().apply {
+        localDataSource.saveContacts(this) // Cache contacts
     }
 
     override suspend fun getContact(id: String) = localDataSource.getContact(id)

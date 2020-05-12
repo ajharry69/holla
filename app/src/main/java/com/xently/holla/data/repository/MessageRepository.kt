@@ -1,6 +1,5 @@
 package com.xently.holla.data.repository
 
-import com.google.android.gms.tasks.Task
 import com.xently.holla.data.Result
 import com.xently.holla.data.Source
 import com.xently.holla.data.Source.LOCAL
@@ -40,12 +39,12 @@ class MessageRepository internal constructor(
         }
     }
 
-    override suspend fun deleteMessage(message: Message, source: Source?): Task<Void>? {
+    override suspend fun deleteMessage(message: Message, source: Source?): Result<Unit> {
         return when (source) {
             REMOTE -> remoteDataSource.deleteMessage(message, source)
             LOCAL -> localDataSource.deleteMessage(message, source)
-            null -> remoteDataSource.deleteMessage(message, source)?.apply {
-                localDataSource.deleteMessage(message, source)
+            null -> remoteDataSource.deleteMessage(message, source).apply {
+                deleteMessage(message, LOCAL)
             }
         }
     }
@@ -55,7 +54,7 @@ class MessageRepository internal constructor(
             REMOTE -> remoteDataSource.deleteMessage(id, source)
             LOCAL -> localDataSource.deleteMessage(id, source)
             null -> remoteDataSource.deleteMessage(id, source).apply {
-                localDataSource.deleteMessage(id, source)
+                deleteMessage(id, LOCAL)
             }
         }
     }

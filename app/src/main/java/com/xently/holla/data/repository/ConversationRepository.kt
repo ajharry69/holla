@@ -1,6 +1,5 @@
 package com.xently.holla.data.repository
 
-import com.google.android.gms.tasks.Task
 import com.xently.holla.data.Result
 import com.xently.holla.data.Source
 import com.xently.holla.data.Source.LOCAL
@@ -25,31 +24,27 @@ class ConversationRepository internal constructor(
     override suspend fun saveConversation(
         conversation: Conversation,
         destination: Source?
-    ) = when (destination) {
+    ): Result<Conversation> = when (destination) {
         REMOTE -> remoteDataSource.saveConversation(conversation, destination)
-        LOCAL -> localDataSource.saveConversation(conversation, destination)
+        LOCAL -> localDataSource.saveConversation(conversation.run {
+            copy(mate = mate?.let { getLocalContact(it) })
+        }, destination)
         null -> remoteDataSource.saveConversation(conversation, destination).data.run {
-            if (this == null) {
-                Result.Error(Exception("Error saving conversations"))
-            } else {
-                localDataSource.saveConversation(
-                    copy(mate = mate?.let { getLocalContact(it) }),
-                    destination
-                )
-            }
+            this?.let { saveConversation(it, LOCAL) }
+                ?: Result.Error(Exception("Error saving conversations"))
         }
     }
 
     override suspend fun saveConversations(
         conversations: List<Conversation>,
         destination: Source?
-    ) = when (destination) {
+    ): Result<List<Conversation>> = when (destination) {
         REMOTE -> remoteDataSource.saveConversations(conversations, destination)
-        LOCAL -> localDataSource.saveConversations(conversations, destination)
+        LOCAL -> localDataSource.saveConversations(conversations.map { conv ->
+            conv.copy(mate = conv.mate?.let { getLocalContact(it) })
+        }, destination)
         null -> remoteDataSource.saveConversations(conversations, destination).listData.run {
-            localDataSource.saveConversations(map { conv ->
-                conv.copy(mate = conv.mate?.let { getLocalContact(it) })
-            }, destination)
+            saveConversations(this, LOCAL)
         }
     }
 
@@ -58,36 +53,26 @@ class ConversationRepository internal constructor(
             REMOTE -> remoteDataSource.deleteConversation(id, source)
             LOCAL -> localDataSource.deleteConversation(id, source)
             null -> remoteDataSource.deleteConversation(id, source).run {
-                localDataSource.deleteConversation(id, source)
+                deleteConversation(id, LOCAL)
             }
         }
     }
 
-    override suspend fun deleteConversation(
-        conversation: Conversation,
-        source: Source?
-    ): Task<Void>? {
-        return when (source) {
+    override suspend fun deleteConversation(conversation: Conversation, source: Source?) =
+        when (source) {
             REMOTE -> remoteDataSource.deleteConversation(conversation, source)
             LOCAL -> localDataSource.deleteConversation(conversation, source)
             null -> remoteDataSource.deleteConversation(conversation, source)?.run {
                 localDataSource.deleteConversation(conversation, source)
             }
         }
-    }
 
-    override suspend fun getConversation(mateId: String): Conversation? {
-        return remoteDataSource.getConversation(mateId)?.apply {
-            localDataSource.saveConversation(
-                this.copy(mate = mate?.let { getLocalContact(it) }),
-                LOCAL
-            )
+    override suspend fun getConversation(mateId: String) =
+        remoteDataSource.getConversation(mateId)?.apply {
+            saveConversation(this, LOCAL)
         }
-    }
 
-    override suspend fun getConversations(): List<Conversation> {
-        return remoteDataSource.getConversations().apply {
-            localDataSource.saveConversations(this, LOCAL)
-        }
+    override suspend fun getConversations() = remoteDataSource.getConversations().apply {
+        saveConversations(this, LOCAL)
     }
 }

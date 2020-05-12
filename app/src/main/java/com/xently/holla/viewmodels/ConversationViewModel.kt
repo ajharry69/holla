@@ -3,7 +3,6 @@ package com.xently.holla.viewmodels
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.xently.holla.data.Source
-import com.xently.holla.data.model.Message
 import com.xently.holla.data.repository.schema.IConversationRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -8,6 +8,7 @@ import android.provider.Settings
 import androidx.lifecycle.Observer
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
+import com.xently.holla.Log
 import com.xently.holla.R
 import com.xently.holla.viewmodels.BaseViewModel
 import com.xently.xui.ListFragment
@@ -73,7 +74,13 @@ abstract class CoreListFragment<T> : ListFragment<T>(), FirebaseAuth.AuthStateLi
     }
 
     override fun onAuthStateChanged(p0: FirebaseAuth) {
-        if (p0.currentUser != null) onRefreshRequested(false)
+        if (p0.currentUser != null) onRefreshRequested(false) else {
+            Log.show(
+                CoreListFragment::class.java.simpleName,
+                "Auth status changed! User null? true...",
+                type = Log.Type.ERROR
+            )
+        }
     }
 
     companion object {

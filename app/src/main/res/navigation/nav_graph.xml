@@ -10,7 +10,7 @@
         android:id="@+id/dest_conversation_list"
         android:name="com.xently.holla.ui.list.conversation.ConversationListFragment"
         android:label="@string/app_name"
-        tools:layout="@layout/list_fragment">
+        tools:layout="@layout/xui_list_fragment">
         <action
             android:id="@+id/action_message"
             app:destination="@id/dest_message" />
@@ -25,7 +25,7 @@
         android:id="@+id/dest_contact_list"
         android:name="com.xently.holla.ui.contacts.ContactListFragment"
         android:label="@string/toolbar_title_contact_list"
-        tools:layout="@layout/list_fragment">
+        tools:layout="@layout/xui_list_fragment">
         <action
             android:id="@+id/action_message"
             app:destination="@id/dest_message" />
@@ -51,7 +51,7 @@
         android:id="@+id/dest_message_list"
         android:name="com.xently.holla.ui.list.message.MessageListFragment"
         android:label="@string/toolbar_title_message_list"
-        tools:layout="@layout/list_fragment">
+        tools:layout="@layout/xui_list_fragment">
         <argument
             android:name="argsContact"
             android:defaultValue="@null"

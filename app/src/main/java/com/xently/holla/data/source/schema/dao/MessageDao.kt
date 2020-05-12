@@ -10,7 +10,7 @@ interface MessageDao {
     /**
      * @param srId Sender/Receiver ID
      */
-    @Query("SELECT * FROM Message WHERE senderId = :srId OR receiverId = :srId")
+    @Query("SELECT * FROM Message WHERE senderId = :srId OR receiverId = :srId ORDER BY timeSent DESC")
     fun getObservableMessages(srId: String): LiveData<List<Message>>
 
     @Query("SELECT * FROM Message WHERE id = :id")
@@ -19,7 +19,7 @@ interface MessageDao {
     /**
      * @param srId Sender/Receiver ID
      */
-    @Query("SELECT * FROM Message WHERE senderId = :srId OR receiverId = :srId")
+    @Query("SELECT * FROM Message WHERE senderId = :srId OR receiverId = :srId ORDER BY timeSent DESC")
     fun getMessages(srId: String): List<Message>
 
     @Query("SELECT * FROM Message WHERE id = :id")
