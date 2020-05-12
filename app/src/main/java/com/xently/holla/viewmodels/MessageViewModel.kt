@@ -8,7 +8,6 @@ import com.xently.holla.data.model.Message
 import com.xently.holla.data.repository.schema.IMessageRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 open class MessageViewModel(private val repository: IMessageRepository) :
@@ -27,8 +26,8 @@ open class MessageViewModel(private val repository: IMessageRepository) :
             repository.sendMessage(message)
         }
 
-    fun deleteMessage(message: Message, source: Source? = null) =
-        runBlocking(viewModelScope.coroutineContext) {
+    suspend fun deleteMessage(message: Message, source: Source? = null) =
+        withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
             repository.deleteMessage(message, source)
         }
 

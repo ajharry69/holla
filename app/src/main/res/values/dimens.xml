@@ -8,4 +8,6 @@
     <dimen name="message_text_end_margins">26dp</dimen>
     <dimen name="message_item_container_vertical_padding">5dp</dimen>
     <dimen name="logo_size">150dp</dimen>
+    <dimen name="message_image_height">300dp</dimen>
+    <dimen name="message_image_width">250dp</dimen>
 </resources>

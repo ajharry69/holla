@@ -1,10 +1,12 @@
 package com.xently.holla.data.model
 
+import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Exclude
+import java.io.File
 
 /*sealed class Type {
     object Text : Type()
@@ -21,6 +23,8 @@ enum class Type {
     Video,
     Document
 }
+
+data class MediaFile(val file: File? = null, val uri: Uri? = null)
 
 interface ChatCreator<T> : Parcelable.Creator<T> {
     object Fields {

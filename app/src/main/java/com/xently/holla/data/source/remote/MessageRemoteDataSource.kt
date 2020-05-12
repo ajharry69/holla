@@ -12,6 +12,7 @@ import com.xently.holla.data.getObjects
 import com.xently.holla.data.model.ChatCreator.Fields
 import com.xently.holla.data.model.Contact
 import com.xently.holla.data.model.Message
+import com.xently.holla.data.model.Type
 import com.xently.holla.data.source.schema.IMessageDataSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,14 +33,34 @@ class MessageRemoteDataSource internal constructor(context: Context) :
         }
     }
 
-    override suspend fun sendMessage(message: Message): Result<Message> {
-        val collection = getMyMessagesCollection(message.receiverId)
-        val messageId = collection.document().id
-        val msg = message.copy(id = messageId, senderId = firebaseAuth.currentUser?.uid.toString())
-        val result = collection.document(messageId).set(msg).execute()
-        return if (result is Result.Success) {
-            Result.Success(msg)
-        } else result as Result.Error
+    override suspend fun sendMessage(message: Message) = withContext(Dispatchers.IO) {
+        try {
+            val collection = getMyMessagesCollection(message.receiverId)
+            val messageId = collection.document().id
+            val senderId = firebaseAuth.currentUser?.uid.toString()
+            val mediaFile = message.mediaFile
+            var mediaUrl: String? = null
+            if (message.type != Type.Text && mediaFile != null && mediaFile.uri != null) {
+                // Media file. Upload it first to get the download url that's to be uploaded to db
+                val path = "media/messages/${senderId}/${messageId}"
+                mediaUrl = firebaseStorage.reference.child(path).apply {
+                    putFile(mediaFile.uri).await()
+                }.downloadUrl.await().toString()
+            }
+            val msg = message.copy(
+                id = messageId,
+                senderId = senderId,
+                mediaUrl = mediaUrl,
+                mediaFile = null
+            )
+            val result = collection.document(messageId).set(msg).execute()
+            if (result is Result.Success) {
+                Result.Success(msg)
+            } else result as Result.Error
+        } catch (ex: Exception) {
+            setException(ex)
+            Result.Error(ex)
+        }
     }
 
     override suspend fun sendMessages(messages: List<Message>) = withContext(Dispatchers.IO) {

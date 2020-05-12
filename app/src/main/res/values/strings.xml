@@ -52,4 +52,7 @@
     <string name="channel_name">New Chat</string>
     <string name="channel_description">New chat sent to you from your contacts</string>
     <string name="default_notification_channel_id">Holla Notification Channel</string>
+    <string name="content_description_media">media</string>
+    <string name="internal_storage">Internal storage</string>
+    <string name="content_desc_remove_image">Remove image</string>
 </resources>

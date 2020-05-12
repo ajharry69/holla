@@ -3,6 +3,7 @@ package com.xently.holla.data.model
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -20,7 +21,10 @@ data class Message(
     var read: Boolean = false,
     var deleteFromSender: Boolean = false,
     var deleteFromReceiver: Boolean = false,
-    var timeSent: Timestamp = Timestamp.now()
+    var timeSent: Timestamp = Timestamp.now(),
+    @Ignore
+    @Exclude
+    val mediaFile: MediaFile? = null
 ) : Parcelable {
     @get:Exclude
     val isSender: Boolean
@@ -69,6 +73,7 @@ data class Message(
         result = 31 * result + deleteFromSender.hashCode()
         result = 31 * result + deleteFromReceiver.hashCode()
         result = 31 * result + timeSent.hashCode()
+        result = 31 * result + mediaFile.hashCode()
         return result
     }
 
@@ -89,6 +94,7 @@ data class Message(
         if (deleteFromSender != other.deleteFromSender) return false
         if (deleteFromReceiver != other.deleteFromReceiver) return false
         if (timeSent != other.timeSent) return false
+        if (mediaFile != other.mediaFile) return false
 
         return true
     }

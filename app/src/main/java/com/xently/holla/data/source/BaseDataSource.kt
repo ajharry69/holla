@@ -1,7 +1,7 @@
 package com.xently.holla.data.source
 
 import android.content.Context
-import android.provider.ContactsContract
+import android.provider.ContactsContract.CommonDataKinds
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.tasks.Task
@@ -25,12 +25,10 @@ abstract class BaseDataSource internal constructor(private val context: Context)
     private val observableException = MutableLiveData<Exception>()
 
     private val firebaseFirestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-    private val chatsCollection: CollectionReference = firebaseFirestore.collection(
-        FBCollection.CHATS
-    )
+    private val chatsCollection = firebaseFirestore.collection(FBCollection.CHATS)
 
-    protected val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
-    protected val firebaseStorage: FirebaseStorage = FirebaseStorage.getInstance()
+    protected val firebaseAuth = FirebaseAuth.getInstance()
+    protected val firebaseStorage = FirebaseStorage.getInstance()
     protected val usersCollection = firebaseFirestore.collection(FBCollection.USERS)
 
     protected val SnapshotMetadata.source: Source
@@ -87,10 +85,21 @@ abstract class BaseDataSource internal constructor(private val context: Context)
         return try {
             Result.Success(await())
         } catch (ex: Exception) {
-            Log.show("FCMService", ex.message, ex, Log.Type.ERROR) // TODO
+            Log.show(BaseDataSource::class.java.simpleName, ex.message, ex, Log.Type.ERROR)
             setException(ex)
             onError?.invoke(ex)
             Result.Error(ex)
+        }
+    }
+
+    protected suspend fun <T> Task<T>.executeTask(onError: ((Exception) -> Unit)? = null): T? {
+        return try {
+            await()
+        } catch (ex: Exception) {
+            Log.show(BaseDataSource::class.java.simpleName, ex.message, ex, Log.Type.ERROR)
+            setException(ex)
+            onError?.invoke(ex)
+            null
         }
     }
 
@@ -99,15 +108,17 @@ abstract class BaseDataSource internal constructor(private val context: Context)
     override fun getLocalContact(contact: Contact): Contact {
         var contact1 = contact
         context.contentResolver.query(
-            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            CommonDataKinds.Phone.CONTENT_URI,
             null,
-            "${ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER} LIKE ?",
+            "${CommonDataKinds.Phone.NORMALIZED_NUMBER} LIKE ?",
             arrayOf(contact1.mobileNumber),
             null
         )?.use {
             while (it.moveToNext()) {
-                val name: String =
-                    it.getString(it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME))
+                val name = it.getString(it.getColumnIndex(CommonDataKinds.Phone.DISPLAY_NAME)).run {
+                    // Use mobile number as the name if contact is not been saved!
+                    if (isNullOrBlank()) contact.mobileNumber else this
+                }
                 contact1 = contact1.copy(name = name)
             }
         }
