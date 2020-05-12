@@ -24,4 +24,10 @@
     <style name="AppTheme.FullScreenDialog" parent="@style/AppTheme">
         <item name="android:windowIsFloating">false</item>
     </style>
+
+    <!--<style name="ShapeAppearance.AppTheme.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamilyTopLeft">rounded</item>
+        <item name="cornerFamilyTopRight">rounded</item>
+        <item name="cornerRadius">8dp</item>
+    </style>-->
 </resources>

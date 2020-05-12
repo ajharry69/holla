@@ -4,11 +4,13 @@
 
     <data>
 
-        <import type="com.xently.holla.data.model.Chat" />
+        <import type="com.xently.holla.utils.date.DateKt" />
+
+        <import type="com.xently.holla.data.model.Message" />
 
         <variable
             name="chat"
-            type="Chat" />
+            type="Message" />
     </data>
 
     <RelativeLayout
@@ -61,7 +63,7 @@
                 style="@style/TextAppearance.AppCompat.Small"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{chat.timeSent.toDate().toString()}"
+                android:text="@{DateKt.toPrintableDate(chat.timeSent)}"
                 android:textIsSelectable="true"
                 tools:text="Some User" />
 

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="com.xently.holla.utils.date.DateKt" />
+
+        <variable
+            name="chat"
+            type="com.xently.holla.data.model.Message" />
+
+    </data>
+
+    <RelativeLayout
+        android:id="@+id/message_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/message_item_container_vertical_padding"
+        android:paddingBottom="@dimen/message_item_container_vertical_padding">
+
+        <FrameLayout
+            android:id="@+id/left_arrow"
+            android:layout_width="@dimen/message_arrow_dimen"
+            android:layout_height="@dimen/message_arrow_dimen"
+            android:layout_marginStart="@dimen/left_arrow_start_margin"
+            android:background="@drawable/ic_chat_message_arrow"
+            android:rotation="180" />
+
+        <FrameLayout
+            android:id="@+id/right_arrow"
+            android:layout_width="@dimen/message_arrow_dimen"
+            android:layout_height="@dimen/message_arrow_dimen"
+            android:layout_alignEnd="@+id/message"
+            android:layout_alignParentTop="true"
+            android:layout_marginEnd="@dimen/right_arrow_end_margin"
+            android:background="@drawable/ic_chat_message_arrow"
+            android:rotation="180" />
+
+        <LinearLayout
+            android:id="@+id/message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/message_text_end_margins"
+            android:layout_marginRight="@dimen/message_text_end_margins"
+            android:background="@drawable/ic_chat_message_background"
+            android:orientation="vertical"
+            android:padding="@dimen/message_text_padding">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/image"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/message_image_height"
+                    android:contentDescription="@string/content_description_media"
+                    android:maxWidth="@dimen/message_image_width"
+                    android:minWidth="@dimen/message_image_width"
+                    app:imageFromUrl="@{chat.mediaUrl}"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_chat" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/caption"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textColor="?attr/colorOnBackground"
+                    android:textIsSelectable="true"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:renderHtml="@{chat.body}"
+                    tools:text="Hey this is a message, look!" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <TextView
+                android:id="@+id/name_time_stamp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{DateKt.toPrintableDate(chat.timeSent)}"
+                android:textAppearance="?attr/textAppearanceCaption"
+                android:textIsSelectable="true"
+                tools:text="Some User" />
+
+        </LinearLayout>
+    </RelativeLayout>
+</layout>

@@ -23,27 +23,75 @@
             android:id="@+id/data_entry_container"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:padding="4dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/view_pager">
 
+            <FrameLayout
+                android:id="@+id/media_preview_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toTopOf="@id/message_container"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/image_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <!-- TODO Replace with horizontal recyclerview -->
+
+                    <HorizontalScrollView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content">
+
+                            <ImageView
+                                android:id="@+id/image"
+                                android:layout_width="100dp"
+                                android:layout_height="100dp"
+                                android:contentDescription="@string/content_description_media"
+                                android:scaleType="centerCrop"
+                                tools:background="@android:color/darker_gray" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <ImageButton
+                        android:id="@+id/remove_image"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="@string/content_desc_remove_image"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_close" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </FrameLayout>
+
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/message_container"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:counterEnabled="true"
-                app:counterMaxLength="@integer/max_message_size"
+                android:hint="@string/hint_type_message"
                 app:endIconContentDescription="@string/content_desc_send_message"
                 app:endIconDrawable="@drawable/ic_action_send"
                 app:endIconMode="custom"
-                app:errorEnabled="true"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/media_preview_container"
                 app:startIconContentDescription="@string/content_desc_attach_file"
                 app:startIconDrawable="@drawable/ic_action_attach_file">
 
@@ -51,7 +99,6 @@
                     android:id="@+id/message"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/hint_type_message"
                     android:inputType="textMultiLine|text"
                     android:maxLines="4"
                     android:selectAllOnFocus="true" />

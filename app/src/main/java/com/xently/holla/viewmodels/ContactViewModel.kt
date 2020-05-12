@@ -1,15 +1,15 @@
 package com.xently.holla.viewmodels
 
-import android.app.Activity
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.xently.holla.data.repository.schema.IContactRepository
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 abstract class ContactViewModel(private val repository: IContactRepository) :
     BaseViewModel(repository) {
-    fun getContactList(activity: Activity) = runBlocking(viewModelScope.coroutineContext) {
-        repository.getContactList(activity)
+    suspend fun getContactList() = withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
+        repository.getContactList()
     }
 
     fun getObservableContactList() = liveData(viewModelScope.coroutineContext) {

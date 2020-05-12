@@ -10,7 +10,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
-class MessageListFragmentTest{
+class MessageListFragmentTest {
     private lateinit var scenario: FragmentScenario<MessageListFragment>
     private lateinit var navController: NavController
 
@@ -18,11 +18,11 @@ class MessageListFragmentTest{
     fun setUp() {
         navController = Mockito.mock(NavController::class.java)
         scenario = launchFragmentInContainer(
-            themeResId= R.style.AppTheme,
-            factory=MessageListFragmentFactory(Contact())
+            themeResId = R.style.AppTheme,
+            factory = MessageListFragmentFactory(MessageListFragmentArgs(Contact(), -2).toBundle())
         )
-        with(scenario){
-            onFragment{
+        with(scenario) {
+            onFragment {
                 androidx.navigation.Navigation.setViewNavController(it.requireView(), navController)
             }
         }

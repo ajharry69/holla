@@ -23,11 +23,11 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUserMetadata
 import com.xently.holla.Log.Type.ERROR
-import com.xently.holla.data.repository.Result
+import com.xently.holla.data.Result
 import com.xently.holla.databinding.MainActivityBinding
 import com.xently.holla.utils.Type
 import com.xently.xui.SearchableActivity
-import com.xently.xui.utils.showSnackBar
+import com.xently.xui.utils.ui.showSnackBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

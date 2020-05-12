@@ -8,13 +8,17 @@ import com.bumptech.glide.Registry
 import com.bumptech.glide.annotation.GlideModule
 import com.firebase.ui.storage.images.FirebaseImageLoader
 import com.google.firebase.storage.StorageReference
-import com.xently.holla.data.repository.schema.IChatRepository
+import com.xently.holla.data.repository.schema.IMessageRepository
 import com.xently.holla.data.repository.schema.IContactRepository
+import com.xently.holla.data.repository.schema.IConversationRepository
 import com.xently.holla.data.repository.schema.IUserRepository
 import java.io.InputStream
 
 class App : MultiDexApplication() {
-    val chatRepository: IChatRepository
+    val conversationRepository: IConversationRepository
+        get() = ServiceLocator.provideConversationRepository(this)
+
+    val chatRepository: IMessageRepository
         get() = ServiceLocator.provideChatRepository(this)
 
     val userRepository: IUserRepository

@@ -9,8 +9,10 @@ import com.xently.holla.Log.Type.*
 
 object FBCollection {
     const val USERS = "users"
+    const val CHATS = "chats"
     const val MESSAGES = "messages"
     const val CONVERSATIONS = "conversations"
+    const val UNREAD_COUNT = "unreadCount"
 }
 
 object Log {

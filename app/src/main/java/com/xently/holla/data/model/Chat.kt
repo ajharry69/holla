@@ -1,26 +1,63 @@
 package com.xently.holla.data.model
 
+import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Exclude
+import java.io.File
 
-data class Chat(
-    val id: String = "",
-    val body: String? = null,
-    val receiverId: String = "",
-    val senderId: String = "", // Will be picked from the currently signed in user's ID
-    val type: Type = Type.Text,
-    val mediaUrl: String? = null,
-    val sent: Boolean = true,
-    val read: Boolean = false,
-    val deleteFromSender: Boolean = false,
-    val deleteFromReceiver: Boolean = false,
-    val timeSent: Timestamp = Timestamp.now(),
-    @get:Exclude val sender: Contact = Contact(id = senderId),
-    @get:Exclude val receiver: Contact = Contact(id = receiverId)
+/*sealed class Type {
+    object Text : Type()
+    sealed class Media : Type() {
+        object Photo : Media()
+        object Video : Media()
+        object Document : Media()
+    }
+}*/
+
+enum class Type {
+    Text,
+    Photo,
+    Video,
+    Document
+}
+
+data class MediaFile(val file: File? = null, val uri: Uri? = null)
+
+interface ChatCreator<T> : Parcelable.Creator<T> {
+    object Fields {
+        const val ID = "id"
+        const val BODY = "body"
+        const val RECEIVER = "receiverId"
+        const val SENDER = "senderId"
+        const val TYPE = "type"
+        const val MEDIA_URL = "mediaUrl"
+        const val SENT = "sent"
+        const val READ = "read"
+        const val DELETE_FROM_SENDER = "deleteFromSender"
+        const val DELETE_FROM_RECEIVER = "deleteFromReceiver"
+        const val TIME_SENT = "timeSent"
+    }
+}
+
+abstract class Chat(
+    open val id: String = "",
+    open val body: String? = null,
+    open val receiverId: String = "",
+    open val senderId: String = "", // Will be picked from the currently signed in user's ID
+    open val type: Type = Type.Text,
+    open val mediaUrl: String? = null,
+    open val sent: Boolean = true,
+    open val read: Boolean = false,
+    open val deleteFromSender: Boolean = false,
+    open val deleteFromReceiver: Boolean = false,
+    open val timeSent: Timestamp = Timestamp.now(),
+    open val sender: Contact = Contact(id = senderId),
+    open val receiver: Contact = Contact(id = receiverId)
 ) : Parcelable {
+
     @get:Exclude
     val isSender: Boolean
         get() = FirebaseAuth.getInstance().currentUser?.uid == senderId
@@ -49,29 +86,12 @@ data class Chat(
         parcel.readParcelable(Contact::class.java.classLoader)!!
     )
 
-    /*sealed class Type {
-        object Text : Type()
-        sealed class Media : Type() {
-            object Photo : Media()
-            object Video : Media()
-            object Document : Media()
-        }
-    }*/
-
-    enum class Type {
-        Text,
-        Photo,
-        Video,
-        Document
-    }
-
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.run {
             writeString(id)
             writeString(body)
             writeString(receiverId)
             writeString(senderId)
-            writeString(type.name)
             writeString(mediaUrl)
             writeByte(if (sent) 1 else 0)
             writeByte(if (read) 1 else 0)
@@ -123,26 +143,5 @@ data class Chat(
         if (receiver != other.receiver) return false
 
         return true
-    }
-
-    companion object CREATOR : Parcelable.Creator<Chat> {
-        object Fields {
-            const val ID = "id"
-            const val BODY = "body"
-            const val RECEIVER = "receiverId"
-            const val SENDER = "senderId"
-            const val TYPE = "type"
-            const val MEDIA_URL = "mediaUrl"
-            const val SENT = "sent"
-            const val READ = "read"
-            const val DELETE_FROM_SENDER = "deleteFromSender"
-            const val DELETE_FROM_RECEIVER = "deleteFromReceiver"
-            const val TIME_SENT = "timeSent"
-        }
-
-        override fun createFromParcel(parcel: Parcel): Chat =
-            Chat(parcel)
-
-        override fun newArray(size: Int): Array<Chat?> = arrayOfNulls(size)
     }
 }
