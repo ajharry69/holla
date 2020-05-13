@@ -10,4 +10,5 @@
     <dimen name="logo_size">150dp</dimen>
     <dimen name="message_image_height">300dp</dimen>
     <dimen name="message_image_width">250dp</dimen>
+    <dimen name="list_avatar_size">50dp</dimen>
 </resources>

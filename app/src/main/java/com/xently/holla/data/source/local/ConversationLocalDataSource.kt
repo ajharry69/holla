@@ -1,7 +1,6 @@
 package com.xently.holla.data.source.local
 
 import android.content.Context
-import com.google.android.gms.tasks.Task
 import com.xently.holla.data.Result
 import com.xently.holla.data.Source
 import com.xently.holla.data.model.Conversation
@@ -38,14 +37,12 @@ class ConversationLocalDataSource internal constructor(
     override suspend fun deleteConversation(
         conversation: Conversation,
         source: Source?
-    ): Task<Void>? {
+    ): Result<Unit> {
         dao.deleteConversation(conversation)
-        return null
+        return Result.Success(Unit)
     }
 
-    override suspend fun getConversation(mateId: String): Conversation? {
-        return dao.getConversation(mateId)
-    }
+    override suspend fun getConversation(mateId: String) = dao.getConversation(mateId)
 
     override suspend fun getConversations() = dao.getConversations()
 }

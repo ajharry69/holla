@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SnapshotMetadata
@@ -61,19 +62,9 @@ abstract class BaseDataSource internal constructor(private val context: Context)
             .collection(FBCollection.UNREAD_COUNT)
     }
 
-    @Throws(AssertionError::class)
-    protected fun getChatMateMessagesCollection(mateId: String): CollectionReference {
-        return chatsCollection.document(mateId).collection(MESSAGES)
-    }
-
-    @Throws(AssertionError::class)
-    protected fun getChatMateConversationsCollection(mateId: String): CollectionReference {
-        return chatsCollection.document(mateId).collection(FBCollection.CONVERSATIONS)
-    }
-
-    @Throws(AssertionError::class)
-    protected fun getChatMateUnreadCountsCollection(mateId: String): CollectionReference {
-        return chatsCollection.document(mateId).collection(FBCollection.UNREAD_COUNT)
+    protected fun FirebaseUser?.getContact(fcmToken: String? = null): Contact? {
+        val user = this ?: return null
+        return Contact(user.uid, user.displayName, user.phoneNumber, fcmToken = fcmToken)
     }
 
     protected fun setException(ex: Exception?) {
@@ -106,6 +97,7 @@ abstract class BaseDataSource internal constructor(private val context: Context)
     override fun getObservableException(): LiveData<Exception> = observableException
 
     override fun getLocalContact(contact: Contact): Contact {
+        if (contact.mobileNumber.isNullOrBlank()) return contact
         var contact1 = contact
         context.contentResolver.query(
             CommonDataKinds.Phone.CONTENT_URI,

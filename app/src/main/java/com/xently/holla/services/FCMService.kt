@@ -12,7 +12,14 @@ import com.google.firebase.messaging.RemoteMessage
 import com.xently.holla.App
 import com.xently.holla.Log
 import com.xently.holla.R
+import com.xently.holla.data.Source
 import com.xently.holla.data.model.Contact
+import com.xently.holla.data.model.Notification
+import com.xently.holla.data.model.ObjectOperation
+import com.xently.holla.data.model.ObjectOperation.Operation.DELETE
+import com.xently.holla.data.model.ObjectOperation.Operation.UPDATE
+import com.xently.holla.data.model.ObjectOperation.Type.*
+import com.xently.holla.viewmodels.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -23,6 +30,7 @@ class FCMService : FirebaseMessagingService() {
         super.onCreate()
         val app = application as App
         viewModel = FCMViewModelFactory(
+            app.conversationRepository,
             app.chatRepository,
             app.userRepository
         ).create(FCMViewModel::class.java)
@@ -34,34 +42,54 @@ class FCMService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(p0: RemoteMessage) {
-        // ViewModel is required to process received message(s). Prevent further actions if null
-        val vm: FCMViewModel = viewModel ?: return
-
         val data = p0.data
 
-        val notification = p0.notification
-        val (title, body) = Pair(notification?.title, notification?.body)
-
-        Log.show(
-            LOG_TAG,
-            "FCM Chat received!\nTitle: $title\nBody: $body\nData: ${p0.data}"
-        ) // TODO
-
-        vm.run {
-            viewModelScope.launch(Dispatchers.Main) {
-
-                val senderKey = "sender"
-                val isNewMessageSentToMe = data.containsKey(senderKey)
-                val senderJson = data[senderKey]
-                val contact = Contact.fromJson(senderJson ?: title) ?: return@launch
-
-                if (isNewMessageSentToMe) {
-                    val localContact = vm.getLocalContact(contact)
-                    buildAndSendNotification(localContact.name ?: title, body ?: data["body"])
-                } else {
-                    val conversationContact = Contact.fromJson(data["conversationContact"])
-                    vm.getMessages(conversationContact)
+        viewModel?.run {
+            try {
+                // New message notification was received
+                Notification.fromMap(data)?.run {
+                    if (!senderId.isNullOrBlank() && !messageId.isNullOrBlank())
+                        getMessage(senderId, messageId)
+                    if (!title.isNullOrBlank() || !body.isNullOrBlank()) {
+                        viewModelScope.launch(Dispatchers.Main) {
+                            val contact = getLocalContact(Contact(mobileNumber = title))
+                            buildAndSendNotification(
+                                contact.name ?: title,
+                                body,
+                                imageUrl,
+                                viewModel
+                            )
+                        }
+                    }
                 }
+            } catch (ex: Exception) {
+                Log.show(LOG_TAG, ex.message, ex, Log.Type.ERROR)
+            }
+
+            try {
+                // Data update notification was received
+                ObjectOperation.fromMap(data)?.run {
+                    if (id.isNullOrBlank()) return
+                    when (objectType) {
+                        CONVERSATION -> {
+                            when (operation) {
+                                UPDATE -> getConversation(id)
+                                DELETE -> {
+                                    viewModelScope.launch(Dispatchers.IO) {
+                                        deleteConversation(id, Source.LOCAL)
+                                        deleteMessages(id, Source.LOCAL)
+                                    }
+                                }
+                                else -> Unit
+                            }
+                        }
+                        MESSAGE -> Unit
+                        CONTACT -> Unit
+                        else -> Unit
+                    }
+                }
+            } catch (ex: Exception) {
+                Log.show(LOG_TAG, ex.message, ex, Log.Type.ERROR)
             }
         }
     }
@@ -76,44 +104,56 @@ class FCMService : FirebaseMessagingService() {
         viewModel?.updateFCMToken(p0)
     }
 
-    private fun buildAndSendNotification(title: String?, body: String?) {
-        val mBuilder = buildNotification(title, body)
+    private suspend fun buildAndSendNotification(
+        title: String?, body: String?,
+        imageUrl: String?,
+        viewModel: BaseViewModel?
+    ) {
+        val mBuilder = buildNotification(title, body, imageUrl, viewModel)
 
-        sendNotification(mBuilder)
+        mBuilder.sendNotification()
     }
 
-    private fun buildNotification(title: String?, body: String?): NotificationCompat.Builder {
+    private suspend fun buildNotification(
+        title: String?,
+        body: String?,
+        imageUrl: String?,
+        viewModel: BaseViewModel?
+    ): NotificationCompat.Builder {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Create the NotificationChannel, but only on API 26+ because
-            // the NotificationChannel class is new and not in the support library
-            val name = getString(R.string.channel_name)// user visible name
-            // description that user sees in the system settings
-            val desc = getString(R.string.channel_description)
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                name,
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply { description = desc }
+                getString(R.string.channel_name), // user visible name
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                // description that user sees in the system settings
+                description = getString(R.string.channel_description)
+            }
             // Register the channel with the system
-            val notificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+            (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).run {
+                createNotificationChannel(channel)
+            }
         }
 
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .apply {
-                setContentTitle(title)
-                setContentText(body)
-//                setLargeIcon()
-                setStyle(NotificationCompat.BigTextStyle().bigText(body))
-                priority = NotificationCompat.PRIORITY_DEFAULT
-                setAutoCancel(true)//remove notification when user taps on it
+        return NotificationCompat.Builder(this, CHANNEL_ID).apply {
+            setContentTitle(title)
+            setContentText(body)
+            setSmallIcon(R.drawable.ic_chat_notification)
+            if (!imageUrl.isNullOrBlank()) {
+                viewModel?.also { vm ->
+                    setLargeIcon(vm.getBitmap(this@FCMService, imageUrl))
+                }
             }
+            setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            priority = NotificationCompat.PRIORITY_DEFAULT
+            setAutoCancel(true)//remove notification when user taps on it
+        }
     }
 
-    private fun sendNotification(mBuilder: NotificationCompat.Builder) {
-        NotificationManagerCompat.from(this)
-            .apply { notify(System.currentTimeMillis().toInt(), mBuilder.build()) }
+    private fun NotificationCompat.Builder.sendNotification() {
+        NotificationManagerCompat.from(this@FCMService).apply {
+            notify(System.currentTimeMillis().toInt(), build())
+        }
     }
 
     companion object {

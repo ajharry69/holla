@@ -23,7 +23,7 @@ interface MessageDao {
     fun getMessages(srId: String): List<Message>
 
     @Query("SELECT * FROM Message WHERE id = :id")
-    suspend fun getMessage(id: String): Message
+    suspend fun getMessage(id: String): Message?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE, entity = Message::class)
     suspend fun saveMessage(message: Message)

@@ -190,7 +190,7 @@ class MessageFragment : Fragment(), FirebaseAuth.AuthStateListener {
                     if (it is Result.Success<*>) {
                         clearText(binding.message)
                         hideViews(binding.imageContainer)
-                        viewModel.getMessages(message.receiverId) // TODO: Delete...
+//                        viewModel.getMessages(message.receiverId) // TODO: Delete...
                     }
                 }
             }

@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-open class MessageViewModel(private val repository: IMessageRepository) :
+abstract class MessageViewModel(private val repository: IMessageRepository) :
     BaseViewModel(repository) {
 
     fun getObservableMessages(contact: Contact) = liveData(viewModelScope.coroutineContext) {
@@ -21,9 +21,9 @@ open class MessageViewModel(private val repository: IMessageRepository) :
         emitSource(repository.getObservableMessages(contactId))
     }
 
-    suspend fun sendMessage(message: Message) =
+    suspend fun sendMessage(message: Message, destination: Source? = null) =
         withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
-            repository.sendMessage(message)
+            repository.sendMessage(message, destination)
         }
 
     suspend fun deleteMessage(message: Message, source: Source? = null) =
@@ -40,6 +40,12 @@ open class MessageViewModel(private val repository: IMessageRepository) :
     fun getMessages(contactId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.getMessages(contactId)
+        }
+    }
+
+    fun getMessage(senderId: String, id: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.getMessage(senderId, id)
         }
     }
 

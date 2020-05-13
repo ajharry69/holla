@@ -22,11 +22,8 @@ class ContactRepository internal constructor(
 
     override suspend fun getObservableContact(id: String) = localDataSource.getObservableContact(id)
 
-    override suspend fun saveContact(contact: Contact) {
-        localDataSource.saveContact(contact)
-    }
+    override suspend fun saveContact(contact: Contact) = localDataSource.saveContact(contact)
 
-    override suspend fun saveContacts(contacts: List<Contact>) {
+    override suspend fun saveContacts(contacts: List<Contact>) =
         localDataSource.saveContacts(contacts)
-    }
 }

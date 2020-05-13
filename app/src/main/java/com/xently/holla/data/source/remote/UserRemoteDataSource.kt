@@ -11,7 +11,9 @@ import com.xently.holla.data.Result
 import com.xently.holla.data.model.Contact
 import com.xently.holla.data.source.schema.IUserDataSource
 import com.xently.holla.utils.Type
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class UserRemoteDataSource internal constructor(private val context: Context) :
     BaseRemoteDataSource(context), IUserDataSource {
@@ -36,11 +38,12 @@ class UserRemoteDataSource internal constructor(private val context: Context) :
         } else task as Result.Error
     }
 
-    override suspend fun signOut(): Result<Unit> {
+    override suspend fun signOut() = withContext(Dispatchers.IO) {
+        updateFCMToken(null)
         val task = AuthUI.getInstance().signOut(context).execute()
         setContact(firebaseAuth.currentUser)
-        updateFCMToken(null)
-        return if (task is Result.Success) {
+
+        if (task is Result.Success) {
             Result.Success(Unit)
         } else task as Result.Error
     }
@@ -50,12 +53,7 @@ class UserRemoteDataSource internal constructor(private val context: Context) :
         usersCollection.document(userId).update(Contact.CREATOR.Fields.FCM_TOKEN, token)
     }
 
-    private fun FirebaseUser?.getContact(fcmToken: String? = null): Contact? {
-        val user = this ?: return null
-        return Contact(user.uid, user.displayName, user.phoneNumber, fcmToken = fcmToken)
-    }
-
     private fun setContact(user: FirebaseUser?) {
-        _observableContact.value = user.getContact()
+        _observableContact.postValue(user.getContact())
     }
 }

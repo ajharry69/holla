@@ -8,6 +8,7 @@ import androidx.room.PrimaryKey
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Exclude
+import com.xently.holla.utils.JSON_CONVERTER
 
 @Entity
 data class Message(
@@ -98,6 +99,8 @@ data class Message(
 
         return true
     }
+
+    override fun toString(): String = JSON_CONVERTER.toJson(this)
 
     companion object CREATOR : ChatCreator<Message> {
 

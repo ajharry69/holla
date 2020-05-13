@@ -7,13 +7,13 @@ import com.xently.holla.data.model.Contact
 @Dao
 interface ContactDao {
 
-    @Query("SELECT * FROM contact")
+    @Query("SELECT * FROM contact ORDER BY name, mobileNumber")
     fun getObservableContacts(): LiveData<List<Contact>>
 
     @Query("SELECT * FROM contact WHERE id = :id")
     fun getObservableContact(id: String): LiveData<Contact>
 
-    @Query("SELECT * FROM contact")
+    @Query("SELECT * FROM contact ORDER BY name, mobileNumber")
     fun getContacts(): List<Contact>
 
     @Query("SELECT * FROM contact WHERE id = :id")

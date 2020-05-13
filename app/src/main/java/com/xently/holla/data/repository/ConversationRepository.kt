@@ -58,14 +58,18 @@ class ConversationRepository internal constructor(
         }
     }
 
-    override suspend fun deleteConversation(conversation: Conversation, source: Source?) =
-        when (source) {
+    override suspend fun deleteConversation(
+        conversation: Conversation,
+        source: Source?
+    ): Result<Unit> {
+        return when (source) {
             REMOTE -> remoteDataSource.deleteConversation(conversation, source)
             LOCAL -> localDataSource.deleteConversation(conversation, source)
-            null -> remoteDataSource.deleteConversation(conversation, source)?.run {
-                localDataSource.deleteConversation(conversation, source)
+            null -> remoteDataSource.deleteConversation(conversation, source).run {
+                deleteConversation(conversation, LOCAL)
             }
         }
+    }
 
     override suspend fun getConversation(mateId: String) =
         remoteDataSource.getConversation(mateId)?.apply {

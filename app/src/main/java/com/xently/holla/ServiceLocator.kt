@@ -3,25 +3,25 @@ package com.xently.holla
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.room.Room
-import com.xently.holla.data.repository.MessageRepository
 import com.xently.holla.data.repository.ContactRepository
 import com.xently.holla.data.repository.ConversationRepository
+import com.xently.holla.data.repository.MessageRepository
 import com.xently.holla.data.repository.UserRepository
-import com.xently.holla.data.repository.schema.IMessageRepository
 import com.xently.holla.data.repository.schema.IContactRepository
 import com.xently.holla.data.repository.schema.IConversationRepository
+import com.xently.holla.data.repository.schema.IMessageRepository
 import com.xently.holla.data.repository.schema.IUserRepository
-import com.xently.holla.data.source.local.MessageLocalDataSource
 import com.xently.holla.data.source.local.ContactLocalDataSource
 import com.xently.holla.data.source.local.ConversationLocalDataSource
+import com.xently.holla.data.source.local.MessageLocalDataSource
 import com.xently.holla.data.source.local.UserLocalDataSource
-import com.xently.holla.data.source.remote.MessageRemoteDataSource
 import com.xently.holla.data.source.remote.ContactRemoteDataSource
 import com.xently.holla.data.source.remote.ConversationRemoteDataSource
+import com.xently.holla.data.source.remote.MessageRemoteDataSource
 import com.xently.holla.data.source.remote.UserRemoteDataSource
-import com.xently.holla.data.source.schema.IMessageDataSource
 import com.xently.holla.data.source.schema.IContactDataSource
 import com.xently.holla.data.source.schema.IConversationDataSource
+import com.xently.holla.data.source.schema.IMessageDataSource
 import com.xently.holla.data.source.schema.IUserDataSource
 import com.xently.holla.AppDatabase as Database
 
@@ -120,8 +120,8 @@ object ServiceLocator {
     }
 
     private fun createUserRepository(context: Context): IUserRepository {
-        val (_, remoteDataSource) = createUserDataSources(context)
-        val repo: IUserRepository = UserRepository(remoteDataSource, null)
+        val (localDataSource, remoteDataSource) = createUserDataSources(context)
+        val repo: IUserRepository = UserRepository(remoteDataSource, localDataSource)
         this.userRepository = repo
         return repo
     }
@@ -134,7 +134,8 @@ object ServiceLocator {
     }
 
     private fun createUserDataSources(context: Context): Pair<UserLocalDataSource, UserRemoteDataSource> {
-        val local = this.localUserDataSource ?: UserLocalDataSource(context)
+        val db = database ?: createDatabase(context)
+        val local = this.localUserDataSource ?: UserLocalDataSource(context, db)
         val remote = this.remoteUserDataSource ?: UserRemoteDataSource(context)
 
         this.localUserDataSource = local
@@ -157,7 +158,6 @@ object ServiceLocator {
     private fun createChatDataSources(context: Context): Pair<MessageLocalDataSource, MessageRemoteDataSource> {
         val db = database ?: createDatabase(context)
 
-        val (localConversationDS, remoteConversationDS) = createConversationDataSources(context)
         val local = this.localMessageDataSource
             ?: MessageLocalDataSource(context, db.chatDao)
         val remote =

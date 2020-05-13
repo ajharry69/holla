@@ -144,6 +144,6 @@ class MainActivity : SearchableActivity() {
 
     companion object {
         private const val RC_SIGN_IN = 1234
-        private val LOG_TAG = MainActivity::class.java.simpleName
+        internal val LOG_TAG = MainActivity::class.java.simpleName
     }
 }

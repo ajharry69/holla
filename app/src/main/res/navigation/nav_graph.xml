@@ -13,7 +13,8 @@
         tools:layout="@layout/xui_list_fragment">
         <action
             android:id="@+id/action_message"
-            app:destination="@id/dest_message" />
+            app:destination="@id/dest_message"
+            app:launchSingleTop="true" />
         <action
             android:id="@+id/action_profile"
             app:destination="@id/dest_profile" />
@@ -28,7 +29,10 @@
         tools:layout="@layout/xui_list_fragment">
         <action
             android:id="@+id/action_message"
-            app:destination="@id/dest_message" />
+            app:destination="@id/dest_message"
+            app:launchSingleTop="true"
+            app:popUpTo="@id/dest_conversation_list"
+            app:popUpToInclusive="false" />
     </fragment>
     <fragment
         android:id="@+id/dest_message"

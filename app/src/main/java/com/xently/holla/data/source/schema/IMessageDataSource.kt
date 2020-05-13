@@ -14,8 +14,21 @@ interface IMessageDataSource : IBaseDataSource {
      */
     suspend fun getObservableMessages(contact: Contact): LiveData<List<Message>>
     suspend fun getObservableMessages(contactId: String): LiveData<List<Message>>
-    suspend fun sendMessage(message: Message): Result<Message>
-    suspend fun sendMessages(messages: List<Message>): Result<List<Message>>
+
+    /**
+     * @param destination specifies where [message] is to be sent. `null` means send to both
+     * (remote & cache)
+     */
+    suspend fun sendMessage(message: Message, destination: Source? = null): Result<Message?>
+
+    /**
+     * @param destination specifies where [messages] are to be sent. `null` means send to both
+     * (remote & cache)
+     */
+    suspend fun sendMessages(
+        messages: List<Message>,
+        destination: Source? = null
+    ): Result<List<Message>>
 
     /**
      * @param source specifies from where [message] is to be deleted. `null` means delete from
@@ -36,4 +49,5 @@ interface IMessageDataSource : IBaseDataSource {
     suspend fun deleteMessages(contactId: String, source: Source? = null): Result<Unit>
     suspend fun getMessages(contact: Contact): List<Message>
     suspend fun getMessages(contactId: String): List<Message>
+    suspend fun getMessage(senderId: String, id: String): Message?
 }

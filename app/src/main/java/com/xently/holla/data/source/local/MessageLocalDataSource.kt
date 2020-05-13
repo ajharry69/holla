@@ -18,12 +18,18 @@ class MessageLocalDataSource internal constructor(
     override suspend fun getObservableMessages(contactId: String) =
         dao.getObservableMessages(contactId)
 
-    override suspend fun sendMessage(message: Message): Result<Message> {
+    override suspend fun sendMessage(
+        message: Message,
+        destination: Source?
+    ): Result<Message?> {
         dao.saveMessage(message)
-        return Result.Success(dao.getMessage(message.id))
+        return Result.Success(getMessage(message.senderId, message.id))
     }
 
-    override suspend fun sendMessages(messages: List<Message>): Result<List<Message>> {
+    override suspend fun sendMessages(
+        messages: List<Message>,
+        destination: Source?
+    ): Result<List<Message>> {
         dao.saveMessages(messages)
         return Result.Success(messages)
     }
@@ -46,4 +52,6 @@ class MessageLocalDataSource internal constructor(
     override suspend fun getMessages(contact: Contact) = dao.getMessages(contact.id)
 
     override suspend fun getMessages(contactId: String) = dao.getMessages(contactId)
+
+    override suspend fun getMessage(senderId: String, id: String) = dao.getMessage(id)
 }

@@ -25,17 +25,26 @@ class MessageRepository internal constructor(
     override suspend fun getObservableMessages(contactId: String) =
         localDataSource.getObservableMessages(contactId)
 
-    override suspend fun sendMessage(message: Message): Result<Message> {
-        return remoteDataSource.sendMessage(message).apply {
-            data?.let {
-                localDataSource.sendMessage(it)
+    override suspend fun sendMessage(message: Message, destination: Source?): Result<Message?> {
+        return when (destination) {
+            REMOTE -> remoteDataSource.sendMessage(message, destination)
+            LOCAL -> localDataSource.sendMessage(message, destination)
+            null -> remoteDataSource.sendMessage(message, destination).apply {
+                data?.let { sendMessage(it, LOCAL) }
             }
         }
     }
 
-    override suspend fun sendMessages(messages: List<Message>): Result<List<Message>> {
-        return remoteDataSource.sendMessages(messages).listData.run {
-            localDataSource.sendMessages(this)
+    override suspend fun sendMessages(
+        messages: List<Message>,
+        destination: Source?
+    ): Result<List<Message>> {
+        return when (destination) {
+            REMOTE -> remoteDataSource.sendMessages(messages, destination)
+            LOCAL -> localDataSource.sendMessages(messages, destination)
+            null -> remoteDataSource.sendMessages(messages, destination).listData.run {
+                sendMessages(this, LOCAL)
+            }
         }
     }
 
@@ -64,20 +73,29 @@ class MessageRepository internal constructor(
             REMOTE -> remoteDataSource.deleteMessages(contactId, source)
             LOCAL -> localDataSource.deleteMessages(contactId, source)
             null -> remoteDataSource.deleteMessages(contactId, source).apply {
-                localDataSource.deleteMessages(contactId, source)
+                deleteMessages(contactId, LOCAL)
             }
         }
     }
 
     override suspend fun getMessages(contact: Contact): List<Message> {
-        val result = remoteDataSource.getMessages(contact)
-        localDataSource.sendMessages(result) // Cache messages
-        return result
+        return remoteDataSource.getMessages(contact).apply {
+            sendMessages(this, LOCAL) // Cache messages
+        }
     }
 
     override suspend fun getMessages(contactId: String): List<Message> {
-        val result = remoteDataSource.getMessages(contactId)
-        localDataSource.sendMessages(result) // Cache messages
-        return result
+        return remoteDataSource.getMessages(contactId).apply {
+            sendMessages(this, LOCAL) // Cache messages
+        }
+    }
+
+    override suspend fun getMessage(senderId: String, id: String): Message? {
+        return remoteDataSource.getMessage(senderId, id)?.let {
+            localDataSource.run {
+                sendMessage(it, LOCAL)
+                getMessage(senderId, id)
+            }
+        }
     }
 }

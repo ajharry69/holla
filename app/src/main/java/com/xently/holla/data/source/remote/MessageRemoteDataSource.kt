@@ -5,10 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import com.google.firebase.firestore.Query.Direction
-import com.xently.holla.data.Result
-import com.xently.holla.data.Source
-import com.xently.holla.data.data
-import com.xently.holla.data.getObjects
+import com.xently.holla.data.*
 import com.xently.holla.data.model.ChatCreator.Fields
 import com.xently.holla.data.model.Contact
 import com.xently.holla.data.model.Message
@@ -33,41 +30,48 @@ class MessageRemoteDataSource internal constructor(context: Context) :
         }
     }
 
-    override suspend fun sendMessage(message: Message) = withContext(Dispatchers.IO) {
-        try {
-            val collection = getMyMessagesCollection(message.receiverId)
-            val messageId = collection.document().id
-            val senderId = firebaseAuth.currentUser?.uid.toString()
-            val mediaFile = message.mediaFile
-            var mediaUrl: String? = null
-            if (message.type != Type.Text && mediaFile != null && mediaFile.uri != null) {
-                // Media file. Upload it first to get the download url that's to be uploaded to db
-                val path = "media/messages/${senderId}/${messageId}"
-                mediaUrl = firebaseStorage.reference.child(path).apply {
-                    putFile(mediaFile.uri).await()
-                }.downloadUrl.await().toString()
+    override suspend fun sendMessage(
+        message: Message,
+        destination: Source?
+    ): Result<Message?> =
+        withContext(Dispatchers.IO) {
+            try {
+                val collection = getMyMessagesCollection(message.receiverId)
+                val messageId = collection.document().id
+                val senderId = firebaseAuth.currentUser?.uid.toString()
+                val mediaFile = message.mediaFile
+                var mediaUrl: String? = null
+                if (message.type != Type.Text && mediaFile != null && mediaFile.uri != null) {
+                    // Media file. Upload it first to get the download url that's to be uploaded to db
+                    val path = "media/messages/${senderId}/${messageId}"
+                    mediaUrl = firebaseStorage.reference.child(path).apply {
+                        putFile(mediaFile.uri).await()
+                    }.downloadUrl.await().toString()
+                }
+                val msg = message.copy(
+                    id = messageId,
+                    senderId = senderId,
+                    mediaUrl = mediaUrl,
+                    mediaFile = null
+                )
+                val result = collection.document(messageId).set(msg).execute()
+                if (result is Result.Success) {
+                    Result.Success(msg)
+                } else result as Result.Error
+            } catch (ex: Exception) {
+                setException(ex)
+                Result.Error(ex)
             }
-            val msg = message.copy(
-                id = messageId,
-                senderId = senderId,
-                mediaUrl = mediaUrl,
-                mediaFile = null
-            )
-            val result = collection.document(messageId).set(msg).execute()
-            if (result is Result.Success) {
-                Result.Success(msg)
-            } else result as Result.Error
-        } catch (ex: Exception) {
-            setException(ex)
-            Result.Error(ex)
         }
-    }
 
-    override suspend fun sendMessages(messages: List<Message>) = withContext(Dispatchers.IO) {
+    override suspend fun sendMessages(
+        messages: List<Message>,
+        destination: Source?
+    ) = withContext(Dispatchers.IO) {
         val msgs = arrayListOf<Message>()
         messages.forEach {
-            launch {
-                sendMessage(it).data?.let {
+            launch(Dispatchers.IO) {
+                sendMessage(it, destination).data?.let {
                     msgs += it
                 }
             }
@@ -75,16 +79,21 @@ class MessageRemoteDataSource internal constructor(context: Context) :
         Result.Success(msgs)
     }
 
-    override suspend fun deleteMessage(message: Message, source: Source?): Result<Unit> {
-        return withContext(Dispatchers.IO) {
-            val result =
-                getMyMessagesCollection(message.receiverId).document(message.id).delete().execute()
-            if (result is Result.Success) {
-                launch { observableMessageList.deleteChatIfPresent(message) }
-                Result.Success(Unit)
-            } else result as Result.Error
+    override suspend fun deleteMessage(message: Message, source: Source?) =
+        withContext(Dispatchers.IO) {
+            try {
+                getMyMessagesCollection(message.receiverId).document(message.id).delete()
+                    .execute().run {
+                        if (isSuccessful) {
+                            deleteIfPresent(message.id)
+                            Result.Success(Unit)
+                        } else this as Result.Error
+                    }
+            } catch (ex: Exception) {
+                setException(ex)
+                Result.Error(ex)
+            }
         }
-    }
 
     override suspend fun deleteMessage(id: String, source: Source?): Result<Unit> {
         // Unimplemented
@@ -98,26 +107,33 @@ class MessageRemoteDataSource internal constructor(context: Context) :
 
     override suspend fun getMessages(contact: Contact) = getMessages(contact.id)
 
-    override suspend fun getMessages(contactId: String): List<Message> {
-        return try {
+    override suspend fun getMessages(contactId: String) = withContext(Dispatchers.IO) {
+        try {
             getMyMessagesCollection(contactId).orderBy(Fields.TIME_SENT, Direction.DESCENDING).get()
-                .await().getObjects<Message>().apply {
-                    observableMessageList.refreshList(this)
-                }
+                .await().getObjects<Message>().apply { refresh() }
         } catch (ex: Exception) {
             setException(ex)
-            observableMessageList.refreshList(emptyList())
-            emptyList()
+            emptyList<Message>().apply { refresh() }
         }
     }
 
-    private suspend fun MutableLiveData<List<Message>>.deleteChatIfPresent(message: Message) {
+    override suspend fun getMessage(senderId: String, id: String) = withContext(Dispatchers.IO) {
+        try {
+            getMyMessagesCollection(senderId).document(id).get().executeTask()
+                ?.getObject<Message>()
+        } catch (ex: Exception) {
+            setException(ex)
+            null
+        }
+    }
+
+    private suspend fun deleteIfPresent(messageId: String) {
         withContext(Dispatchers.Default) {
-            value?.filter { it == message }?.let { refreshList(it) }
+            observableMessageList.value?.filter { it.id == messageId }?.refresh()
         }
     }
 
-    private fun MutableLiveData<List<Message>>.refreshList(list: List<Message>?) {
-        postValue(list)
+    private fun List<Message>?.refresh() {
+        observableMessageList.postValue(this)
     }
 }

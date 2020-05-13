@@ -26,7 +26,8 @@ class ConversationListFragment : CoreListFragment<Conversation>() {
     }
 
     override val viewModel: ConversationListViewModel by viewModels {
-        ConversationListViewModelFactory((requireContext().applicationContext as App).conversationRepository)
+        val app = requireContext().applicationContext as App
+        ConversationListViewModelFactory(app.conversationRepository, app.chatRepository)
     }
 
     override val noDataText: CharSequence?
