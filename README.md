@@ -9,11 +9,11 @@ A simple chat application hosted by [Firebase][firebase-url] implementing a few 
 Checked features are ones already implemented
 
 - [x] Register with phone number
-- [x] Send messages to your **saved** and Holla registered contacts
+- [x] Send messages to your **saved** and Holla-registered contacts
 - [x] Media(pictures, videos, documents e.t.c) support
     - [x] Send
     - [ ] Download
-- [x] Push Notification(coming soon)
+- [x] Push Notification
 - [ ] Group chat
 
 ## Screenshots
